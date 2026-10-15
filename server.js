@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
   const gz = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
   res.writeHead(200, {
     'Content-Type': f.type,
-    'Cache-Control': rel === '/index.html' ? 'no-cache' : 'public, max-age=3600',
+    'Cache-Control': rel === '/assets.js' ? 'public, max-age=3600' : 'no-cache', // only the big artwork file is cached; rules and page always revalidate
     ...(gz ? { 'Content-Encoding': 'gzip' } : {}),
   });
   res.end(gz ? f.gz : f.raw);
