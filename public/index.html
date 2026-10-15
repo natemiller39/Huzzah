@@ -66,6 +66,8 @@ button.b.sm{font-size:12px;padding:5px 9px;margin:0}
 .topbar{display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:6px}
 .spt i.f{color:#222}
 .seat .off{opacity:.6}
+/* option rows (home + lobby) */
+.opts{display:flex;flex-direction:column;gap:6px;margin:6px 0 8px;text-align:left}.opts label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px}.opts select{font-size:16px;padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:rgba(255,255,255,.92);color:#222;min-width:150px}.opts select:disabled{opacity:.55}.set select,.set input{font-size:16px}
 /* compact one-screen table */
 .hpill{font:inherit;font-size:11px;font-weight:700;background:rgba(242,193,78,.2);color:var(--fg);border:1px solid var(--ac);border-radius:12px;padding:3px 8px;cursor:pointer;align-self:center}.sc{width:100%;border-collapse:collapse;margin:4px 0}.rp .sc td,.rp .sc th{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:right;font-weight:400}.rp .sc td:first-child,.rp .sc th:first-child{text-align:left}.rp .sc.st td:nth-child(2),.rp .sc.st th:nth-child(2){text-align:left}.rp .sc th{font-size:11px;opacity:.8}.rp .sc tr.me td{background:rgba(242,193,78,.25);font-weight:700}.rp .sc small{opacity:.8}
 .topbar .b.sm{padding:4px 7px}
@@ -108,6 +110,8 @@ const ONLINE_RULES=`<h3>Playing online</h3><ul><li><b>Create a game</b> to get a
 /* ---------- local state ---------- */
 const LS={get(){try{return JSON.parse(localStorage.getItem('hz')||'{}')}catch(_){return {}}},set(v){try{localStorage.setItem('hz',JSON.stringify(Object.assign(LS.get(),v)))}catch(_){}},del(k){try{const o=LS.get();delete o[k];localStorage.setItem('hz',JSON.stringify(o))}catch(_){}}};
 let S=null,G=null,ws=null,connected=false,wantRoom=null,order=[],sel=[],toastT=0,homeMode=null,setOpen=false,soloSize=4;
+const soloCfg=Object.assign({nn:2,od:2,rfl:0},LS.get().solo||{});
+function setSolo(k,v){soloCfg[k]=v;LS.set({solo:soloCfg});render()}
 const qs=new URLSearchParams(location.search);const inviteCode=(qs.get('room')||'').toUpperCase().slice(0,4);
 let jcode=inviteCode;
 const ck=c=>c.s+'-'+c.r;
@@ -141,7 +145,7 @@ const selCards=()=>{const p=myP(),m={};p.hand.forEach(c=>m[ck(c)]=c);return sel.
 /* ---------- actions ---------- */
 function myName(){const v=(document.getElementById('nm')||{}).value;const n=(v!=null?v:LS.get().name||'').trim();if(v!=null)LS.set({name:n});return n}
 function create(){const n=myName();if(!n)return needName();send({t:'create',name:n})}
-function solo(){const n=myName()||'You';send({t:'solo',name:n,size:soloSize})}
+function solo(){const n=myName()||'You';send({t:'solo',name:n,size:soloSize,cfg:soloCfg})}
 function join(){const n=myName();if(!n)return needName();const c=(document.getElementById('jc').value||'').trim().toUpperCase();if(c.length!=4)return toast('Enter the 4-letter room code.');send({t:'join',code:c,name:n})}
 function needName(){toast('Enter your name first.');const e=document.getElementById('nm');if(e)e.focus()}
 function leave(){if(G&&G.phase!='end'&&!confirm('Leave this game? A bot will take over your seat.'))return;send({t:'leave'});LS.del('code');LS.del('token');S=null;G=null;render()}
@@ -178,15 +182,15 @@ function homeHTML(){const nm=esc(LS.get().name||'');
   <div class="box"><h2>Your name</h2><input id="nm" maxlength="16" placeholder="Name" value="${nm}" autocomplete="nickname" oninput="LS.set({name:this.value})"></div>
   <div class="box"><h2>Join friends</h2><input id="jc" class="code" maxlength="4" placeholder="CODE" value="${esc(jcode)}" oninput="jcode=this.value" autocapitalize="characters" autocomplete="off"><button class="b" onclick="join()">Join game</button></div>
   <div class="box"><h2>Host a game</h2><button class="b" onclick="create()">Create game</button><div class="hint">You'll get a room code to share with friends.</div></div>
-  <div class="box"><h2>Practice</h2><div style="font-size:13px;margin-bottom:4px">Players: <select onchange="soloSize=+this.value">${[2,3,4,5,6].map(v=>`<option ${v==soloSize?'selected':''}>${v}</option>`).join('')}</select></div><button class="b ghost" onclick="solo()">Play solo vs bots</button></div>
+  <div class="box"><h2>Practice vs bots</h2><div class="opts"><label><span>Players</span><select onchange="soloSize=+this.value">${[2,3,4,5,6].map(v=>`<option ${v==soloSize?'selected':''}>${v}</option>`).join('')}</select></label></div>${mainOpts(soloCfg,'','setSolo')}<button class="b ghost" onclick="solo()">Play solo vs bots</button></div>
   <button class="b ghost" style="margin-top:10px" onclick="rules(1)">How to play</button></div>`}
 
+const OPT_NN=[[0,'Off'],[1,'1'],[2,'2'],[3,'3']],OPT_OD=[[0,'Off'],[1,'Deal 1'],[2,'Deal 2, keep 1'],[3,'Deal 3, keep 1']],OPT_RF=[[0,'Off'],[1,'Once per player'],[99,'Unlimited']];
+const opts=(list,v)=>list.map(([x,t])=>`<option value="${x}" ${x==v?'selected':''}>${t}</option>`).join('');
+function mainOpts(c,dis,fn){return `<div class="opts"><label><span>Nobles</span><select ${dis} onchange="${fn}('nn',+this.value)">${opts(OPT_NN,c.nn)}</select></label><label><span>Secret objectives</span><select ${dis} onchange="${fn}('od',+this.value)">${opts(OPT_OD,c.od)}</select></label><label><span>Objective refills</span><select ${dis||(c.od?'':'disabled')} onchange="${fn}('rfl',+this.value)">${opts(OPT_RF,c.rfl)}</select></label></div>`}
 function settingsHTML(edit){const c=S.room.cfg,dis=edit?'':'disabled';
-  return `<details ${setOpen?'open':''} ontoggle="setOpen=this.open" class="set"><summary>Playtest settings${edit?'':' (host sets these)'}</summary>
+  return `<div class="sec">Game options${edit?'':' · the host sets these'}</div>${mainOpts(c,dis,'setCfg')}<details ${setOpen?'open':''} ontoggle="setOpen=this.open" class="set"><summary>More playtest settings</summary>
   <label>Noble spots: <select ${dis} onchange="setCfg('nord',this.value)"><option value="desc" ${c.nord=='desc'?'selected':''}>4 / 2 (first claim best)</option><option value="asc" ${c.nord=='asc'?'selected':''}>2 / 4 (last claim best)</option></select></label>
-  <label>Nobles in play: <select ${dis} onchange="setCfg('nn',+this.value)">${[0,1,2,3].map(v=>`<option value="${v}" ${v==c.nn?'selected':''}>${v||'Off'}</option>`).join('')}</select></label>
-  <label>Secret objectives: <select ${dis} onchange="setCfg('od',+this.value)">${[[0,'Off'],[1,'Deal 1'],[2,'Deal 2, keep 1'],[3,'Deal 3, keep 1']].map(([v,t])=>`<option value="${v}" ${v==c.od?'selected':''}>${t}</option>`).join('')}</select></label>
-  <label>Objective refills: <select ${dis} ${c.od?'':'disabled'} onchange="setCfg('rfl',+this.value)">${[[0,'Off'],[1,'Once per player'],[99,'Unlimited']].map(([v,t])=>`<option value="${v}" ${v==c.rfl?'selected':''}>${t}</option>`).join('')}</select></label>
   <label>Win by: <select ${dis} onchange="setCfg('sm',this.value)"><option value="pts" ${c.sm=='pts'?'selected':''}>Points (hand + nobles)</option><option value="hand" ${c.sm=='hand'?'selected':''}>Best hand (nobles break ties)</option></select></label>
   <details><summary>Hand points</summary>${HN.map((n,i)=>`<label style="display:inline-block;margin:2px 8px 2px 0">${n} <input type="number" ${dis} min="0" style="width:46px" value="${c.hp[i]}" onchange="setHP(${i},this.value)"></label>`).join('')}</details>
   <details><summary>Objective points</summary>${OBJ.map((o,i)=>`<label>${o.t} <input type="number" ${dis} min="0" style="width:46px" value="${c.obv[i]}" onchange="setOV(${i},this.value)"></label>`).join('')}</details></details>`}

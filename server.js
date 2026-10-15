@@ -45,6 +45,18 @@ const newCode = () => { let c; do { c = Array.from({ length: 4 }, () => CODE_CH[
 const newToken = () => crypto.randomBytes(16).toString('hex');
 const clean = (s, d) => (String(s || '').replace(/[<>&"'`]/g, '').trim().slice(0, 16)) || d;
 
+function applyCfg(cfg, c) {
+  c = c || {};
+  if (c.nord === 'asc' || c.nord === 'desc') cfg.nord = c.nord;
+  if (typeof c.obon === 'boolean') cfg.od = c.obon ? (cfg.od || 2) : 0; // older clients
+  if ([0, 1, 2, 3].includes(c.nn)) cfg.nn = c.nn;
+  if ([0, 1, 2, 3].includes(c.od)) cfg.od = c.od;
+  if ([0, 1, 99].includes(c.rfl)) cfg.rfl = c.rfl;
+  if (c.sm === 'pts' || c.sm === 'hand') cfg.sm = c.sm;
+  if (Array.isArray(c.hp) && c.hp.length === 10) cfg.hp = c.hp.map(x => Math.max(0, Math.min(99, x | 0)));
+  if (Array.isArray(c.obv) && c.obv.length === HZ.OBJ.length) cfg.obv = c.obv.map(x => Math.max(0, Math.min(99, x | 0)));
+  cfg.obon = cfg.od > 0;
+}
 function makeRoom(hostName) {
   const room = { code: newCode(), size: 4, cfg: HZ.defaultCfg(), seats: [], g: null, touched: Date.now() };
   rooms.set(room.code, room);
@@ -118,6 +130,7 @@ wss.on('connection', ws => {
       case 'solo': {
         const r = makeRoom(clean(m.name, 'You'));
         r.size = Math.max(2, Math.min(6, m.size | 0 || 4));
+        applyCfg(r.cfg, m.cfg);
         startGame(r); return bind(r, 0);
       }
       case 'join': {
@@ -144,16 +157,7 @@ wss.on('connection', ws => {
         break;
       case 'cfg': {
         if (!isHost || g) return;
-        const c = m.cfg || {};
-        if (c.nord === 'asc' || c.nord === 'desc') room.cfg.nord = c.nord;
-        if (typeof c.obon === 'boolean') room.cfg.od = c.obon ? (room.cfg.od || 2) : 0; // older clients
-        if ([0, 1, 2, 3].includes(c.nn)) room.cfg.nn = c.nn;
-        if ([0, 1, 2, 3].includes(c.od)) room.cfg.od = c.od;
-        if ([0, 1, 99].includes(c.rfl)) room.cfg.rfl = c.rfl;
-        room.cfg.obon = room.cfg.od > 0;
-        if (c.sm === 'pts' || c.sm === 'hand') room.cfg.sm = c.sm;
-        if (Array.isArray(c.hp) && c.hp.length === 10) room.cfg.hp = c.hp.map(x => Math.max(0, Math.min(99, x | 0)));
-        if (Array.isArray(c.obv) && c.obv.length === HZ.OBJ.length) room.cfg.obv = c.obv.map(x => Math.max(0, Math.min(99, x | 0)));
+        applyCfg(room.cfg, m.cfg);
         break;
       }
       case 'kick': {
