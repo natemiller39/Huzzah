@@ -146,7 +146,11 @@ wss.on('connection', ws => {
         if (!isHost || g) return;
         const c = m.cfg || {};
         if (c.nord === 'asc' || c.nord === 'desc') room.cfg.nord = c.nord;
-        if (typeof c.obon === 'boolean') room.cfg.obon = c.obon;
+        if (typeof c.obon === 'boolean') room.cfg.od = c.obon ? (room.cfg.od || 2) : 0; // older clients
+        if ([0, 1, 2, 3].includes(c.nn)) room.cfg.nn = c.nn;
+        if ([0, 1, 2, 3].includes(c.od)) room.cfg.od = c.od;
+        if ([0, 1, 99].includes(c.rfl)) room.cfg.rfl = c.rfl;
+        room.cfg.obon = room.cfg.od > 0;
         if (c.sm === 'pts' || c.sm === 'hand') room.cfg.sm = c.sm;
         if (Array.isArray(c.hp) && c.hp.length === 10) room.cfg.hp = c.hp.map(x => Math.max(0, Math.min(99, x | 0)));
         if (Array.isArray(c.obv) && c.obv.length === HZ.OBJ.length) room.cfg.obv = c.obv.map(x => Math.max(0, Math.min(99, x | 0)));
@@ -184,7 +188,7 @@ wss.on('connection', ws => {
         if (!isHost || !g || !s || s.bot || k === i) return;
         if (s.ws && s.ws.readyState === 1) return err('That player is still connected.');
         s.bot = true; g.P[k].bot = true; g.P[k].sel = null;
-        if (g.P[k].ob == null) g.P[k].ob = g.P[k].oc[0];
+        if (g.P[k].ob == null && g.P[k].oc.length) g.P[k].ob = g.P[k].oc[0];
         maybeReveal(room); maybeAdvance(room);
         break;
       }
@@ -201,7 +205,7 @@ wss.on('connection', ws => {
       case 'leave': {
         if (g) { // mid-game: a bot takes over the seat
           const s = room.seats[i]; s.bot = true; g.P[i].bot = true; g.P[i].sel = null; s.ws = null;
-          if (g.P[i].ob == null) g.P[i].ob = g.P[i].oc[0];
+          if (g.P[i].ob == null && g.P[i].oc.length) g.P[i].ob = g.P[i].oc[0];
           maybeReveal(room); maybeAdvance(room);
         } else {
           room.seats.splice(i, 1);
