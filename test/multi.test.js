@@ -70,6 +70,45 @@ const until = async (f, ms = 3000) => { const t = Date.now(); while (!f()) { if 
   // solo
   const s = client('Solo'); await s.open; s.send({ t: 'solo', name: 'Me', size: 6 });
   await until(() => s.state && s.state.g); if (s.state.g.P.length !== 6) throw new Error('solo size');
+  // setup options + objective refills: 1 noble, deal 3 objectives, unlimited refills
+  const o = client('Opt'); await o.open; o.send({ t: 'create', name: 'Opt' });
+  await until(() => o.state && o.state.room);
+  o.send({ t: 'cfg', cfg: { nn: 1, od: 3, rfl: 99 } }); o.send({ t: 'size', size: 4 });
+  await until(() => o.state.room.cfg.rfl === 99 && o.state.room.size === 4);
+  o.send({ t: 'start' }); await until(() => o.state.g);
+  if (o.state.g.nobles.length !== 1) throw new Error('noble count option');
+  if (o.state.g.P[0].oc.length !== 3) throw new Error('objective deal option');
+  let refills = 0;
+  while (o.state.g.phase !== 'end') {
+    const g2 = o.state.g, mine = g2.P[0];
+    if (mine.ob == null && mine.oc.length) { if (g2.hist.length) refills++; o.send({ t: 'obj', k: 0 }); await until(() => o.state.g.P[0].ob != null); continue; }
+    if (g2.phase === 'pick' && !mine.locked) { o.send({ t: 'play', cards: mine.hand.slice(0, [2, 2, 2, 2, 1][g2.ev]) }); await until(() => o.state.g.phase !== 'pick' || o.state.g.P[0].ob == null); }
+    else if (g2.phase === 'show') { const at = g2.wave * 5 + g2.ev; o.send({ t: 'cont' }); await until(() => o.state.g.phase !== 'show' || o.state.g.wave * 5 + o.state.g.ev !== at); }
+    else await sleep(10);
+  }
+  const ge = o.state.g, done = ge.P.reduce((a, p) => a + p.done.length, 0);
+  // completed objectives must be unique across the table
+  const all = ge.P.flatMap(p => p.done.concat(p.ob != null ? [p.ob] : []));
+  if (new Set(all).size !== all.length) throw new Error('duplicate objectives after refills');
+  console.log('options game: nobles 1, deal 3 | objectives completed + refilled:', done, '| your refill picks:', refills);
+  // engine-level refill check over many all-bot games
+  const HZ = require('../public/engine.js');
+  let rf = 0, once = 0;
+  for (let n = 0; n < 60; n++) {
+    for (const rfl of [99, 1]) {
+      const eg = HZ.newGame([1, 2, 3, 4].map(k => ({ name: 'B' + k, bot: true })), { od: 2, rfl, nn: 2 });
+      while (eg.phase !== 'end') { HZ.reveal(eg); HZ.nxt(eg); }
+      eg.P.forEach((p, i) => {
+        if (p.rf > rfl) throw new Error('refill cap broken');
+        if (rfl === 1 && p.rf) once++;
+        const pts = p.done.reduce((a, ob) => a + HZ.obv(eg, ob), 0) + (p.ob != null && HZ.ach(eg, HZ.OBJ[p.ob], i) ? HZ.obv(eg, p.ob) : 0);
+        if (pts !== HZ.obp(eg, i)) throw new Error('objective scoring mismatch');
+        rf += p.rf;
+      });
+    }
+  }
+  console.log('engine refill check: refills across 120 bot games:', rf, '| capped-at-once games with a refill:', once);
+  if (!rf || !once) throw new Error('no refills happened');
   console.log('ALL TESTS PASSED');
   srv.kill(); process.exit(0);
 })().catch(e => { console.error('FAIL', e); srv.kill(); process.exit(1); });
