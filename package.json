@@ -1,0 +1,14 @@
+{
+  "name": "huzzah",
+  "version": "2.0.0",
+  "description": "HUZZAH! Tournament of Champions: online multiplayer card game",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/multi.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

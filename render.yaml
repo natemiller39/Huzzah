@@ -1,0 +1,9 @@
+services:
+  - type: web
+    runtime: node
+    name: huzzah-online
+    plan: free
+    buildCommand: echo "No build step"
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    autoDeploy: true
