@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>HUZZAH! Tournament of Champions</title>
 <script>if(location.hostname=="huzzah-l7ce.onrender.com")location.replace("https://huzzah-online.onrender.com/"+location.search)</script>
-<meta name="theme-color" content="#2f7d58"><meta name="description" content="HUZZAH! The Tournament of Champions: a poker-inspired card game for 2 to 6 players. Play online with friends.">
+<meta name="theme-color" content="#2f7d58"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&display=swap"><meta name="description" content="HUZZAH! The Tournament of Champions: a poker-inspired card game for 2 to 6 players. Play online with friends.">
 <style>
 
 :root{--bg:#2f7d58;--bg2:#3f9970;--fg:#f6f0dc;--box:rgba(0,0,0,.26);--bd:rgba(255,255,255,.2);--ac:#f2c14e;--card:#fffdf7;--cw:52px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -98,6 +98,36 @@ button.b.sm{font-size:12px;padding:5px 9px;margin:0}
 .hand{padding:14px 0 2px}
 .obs{margin:2px 0}.ob{width:84px}
 #zoom{flex-direction:column;gap:10px;padding:16px;overflow:auto}#zoom img{max-height:62vh;max-width:88vw}#zoom .zt{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;max-width:340px;width:100%;font-size:16px;text-align:center}#zoom .zt p{margin:6px 0;font-size:18px;font-weight:600}#zoom .zs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;font-size:14px}#zoom .zs span{background:var(--box);border-radius:6px;padding:2px 8px}#zoom .zt small{display:block;opacity:.6;margin-top:6px;font-size:11px}
+
+/* tournament ground */
+.ttl,.home h1,.stands .cap b,.ln b,.you .ln b,.evn,.crowd{font-family:"IM Fell English SC",Georgia,serif}
+.stands{position:relative;margin:6px 0 4px;border-radius:12px 12px 4px 4px;overflow:hidden;background:repeating-linear-gradient(180deg,#704626 0 15px,#5a3719 15px 17px);box-shadow:0 4px 10px rgba(0,0,0,.4)}
+.canopy{position:relative;z-index:1;height:20px;background:repeating-linear-gradient(90deg,#a3262a 0 24px,#e3b43f 24px 48px)}
+.canopy::after{content:'';position:absolute;left:0;right:0;top:100%;height:9px;background:radial-gradient(circle at 12px 0,#a3262a 0 11px,transparent 11.5px) 0 0/48px 9px repeat-x,radial-gradient(circle at 36px 0,#e3b43f 0 11px,transparent 11.5px) 0 0/48px 9px repeat-x}
+.stands .rbox{margin:0;padding:13px 6px 6px}
+.stands .nob{background:#efe2c0;color:#2b1d0d;border:1px solid #8a6a3a;border-radius:4px;box-shadow:0 2px 0 #3e2614}
+.stands .nob.on{outline:2px solid #e3b43f;box-shadow:0 0 0 4px rgba(227,180,63,.35),0 2px 0 #3e2614}
+.stands .nob img{border-radius:3px}
+.stands .cap{color:#2b1d0d}.stands .cap b{font-size:13px;font-weight:400}
+.stands .spt i{border-color:rgba(60,40,15,.45);color:#5a3f1c}.stands .spt i.f{border-color:#fff;color:#222}
+.crowd{grid-column:1/-1;text-align:center;color:#efe2c0;opacity:.85;font-size:14px;padding:4px 0 2px}
+.arena{background:repeating-linear-gradient(90deg,#2f7a3a 0 30px,#2a6f34 30px 60px);border:5px solid #6b4423;border-radius:16px;padding:6px 6px 8px}
+.arena:before,.arena:after{content:'';top:-12px;width:16px;height:22px;background:linear-gradient(#a3262a,#a3262a) 0 0/2px 100% no-repeat,linear-gradient(135deg,#e3b43f 50%,transparent 50%) 2px 0/14px 10px no-repeat}
+.herald{background:#3e2614;border:2px solid #8a6a3a;border-radius:6px;padding:3px 3px 2px;margin-bottom:6px}.herald .sch2{margin:0}
+.ring{align-items:start;margin-bottom:-6px;position:relative;z-index:2}
+.ring .lane{border:0;border-top:5px solid var(--pc);border-radius:4px 4px 10px 10px;background:linear-gradient(180deg,rgba(25,16,8,.78),rgba(25,16,8,.6));box-shadow:0 3px 6px rgba(0,0,0,.35)}
+.ring .lane.win{box-shadow:0 0 16px var(--pc),0 3px 6px rgba(0,0,0,.35)}
+.ln b{font-size:13px;font-weight:400}
+.ring.tight .lc{flex-wrap:nowrap;gap:2px}.ring.tight .lc .c{--cw:27px}.ring.tight .lc .bk.big{width:22px;height:31px}.ring.tight .ln b{font-size:12px}.ring.tight .lane .trow .c{--cw:14px}
+.lists{position:relative;display:block;margin:0;padding:12px 10px 8px;border:5px solid #6b4423;border-radius:70px/56px;color:#3a2810;
+ background:repeating-linear-gradient(0deg,rgba(120,85,40,.09) 0 2px,transparent 2px 7px),radial-gradient(ellipse at 50% 45%,#ebd29a,#c99f5e 85%);box-shadow:inset 0 0 18px rgba(80,50,15,.45)}
+.tilt{position:absolute;left:12px;right:12px;top:58%;height:10px;margin-top:-5px;border-radius:3px;background:repeating-linear-gradient(90deg,#3e2614 0 5px,#7a5028 5px 44px);box-shadow:0 3px 4px rgba(0,0,0,.35)}
+.evn{position:relative;z-index:1;text-align:center;font-size:15px;line-height:1;margin:0 0 6px}
+.lrow{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:7px}
+.tro1 small{font-size:10px;opacity:.8}
+.lists .c.ph{background:rgba(90,60,25,.16);border:1px dashed rgba(60,40,15,.55);box-shadow:none}
+.lists .c{box-shadow:0 3px 5px rgba(60,35,10,.45)}
+.you{border:0;border-top:5px solid var(--pc);border-radius:4px 4px 12px 12px;background:linear-gradient(180deg,rgba(25,16,8,.78),rgba(25,16,8,.62))}
 </style></head><body><div id="app"></div>
 <script src="assets.js"></script>
 <script src="engine.js?v=29"></script>
@@ -204,7 +234,7 @@ function lobbyHTML(){const r=S.room,host=isHost(),n=r.seats.length,bots=Math.max
   <div class="box">${settingsHTML(host)}</div>
   ${host?`<button class="b wide" onclick="send({t:'start'})">Start the tournament${bots?` (+${bots} bot${bots>1?'s':''})`:''}</button>`:`<div class="box" style="text-align:center">Waiting for ${esc(r.seats[r.host].name)} to start the game…</div>`}</div>`}
 
-function nobHTML(){if(!G.nobles.length)return'';return `<div class="nobs n${G.nobles.length}">${G.nobles.map((z,ni)=>{const live=G.phase!='end'&&z.n.ev==G.ev;return `<div class="nob ${live?'on':''}" onclick="zoomN(${ni})" title="Tap to enlarge"><img src="${NIMG[z.n.id]}" alt="${z.n.name}"><div class="nbi"><div class="cap"><b>${live?'▶ ':''}${STI[z.n.ev]} ${EV[z.n.ev][0]}</b><br>${z.n.txt}</div><div class="sp">${z.sp.map((x,i)=>`<span class="spt"><i class="${x==null?'':'f'}" ${x==null?'':`style="background:${PC[x]}"`}>${x==null?NV(G)[i]:ini(x)}</i></span>`).join('')}</div></div></div>`}).join('')}</div>`}
+function nobHTML(){const ns=G.nobles;return `<div class="stands"><div class="canopy"></div><div class="rbox nobs n${ns.length}">${ns.length?ns.map((z,ni)=>{const live=G.phase!='end'&&z.n.ev==G.ev;return `<div class="nob ${live?'on':''}" onclick="zoomN(${ni})" title="Tap to enlarge"><img src="${NIMG[z.n.id]}" alt="${z.n.name}"><div class="nbi"><div class="cap"><b>${z.n.name}</b><br>${live?'▶ ':''}${STI[z.n.ev]} ${EV[z.n.ev][0]}: ${z.n.txt}</div><div class="sp">${z.sp.map((x,i)=>`<span class="spt"><i class="${x==null?'':'f'}" ${x==null?'':`style="background:${PC[x]}"`}>${x==null?NV(G)[i]:ini(x)}</i></span>`).join('')}</div></div></div>`}).join(''):'<div class="crowd">No nobles at this tournament</div>'}</div></div>`}
 function zoom(id,src,extra){let d=document.getElementById('zoom');if(!d){d=document.createElement('div');d.id='zoom';d.onclick=()=>{d.style.display='none'};document.body.appendChild(d)}d.innerHTML=`<img src="${src||NIMG[id]}">${extra||''}`;d.style.display='flex'}
 function zoomN(ni){const z=G.nobles[ni],n=z.n,live=G.phase!='end'&&n.ev==G.ev;zoom(null,NIMG[n.id],`<div class="zt"><b>${n.name}</b>${live?' · <span style="color:var(--ac)">▶ this event</span>':''}<div>${STI[n.ev]} ${EV[n.ev][0]}</div><p>${n.txt}</p><div class="zs">${z.sp.map((x,i)=>`<span><b>${NV(G)[i]} pts</b> · ${x==null?'open':esc(G.P[x].n)}</span>`).join('')}</div><small>Tap anywhere to close</small></div>`)}
 function zoomO(id){zoom(null,OIMG[id])}
@@ -215,14 +245,14 @@ function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[
 
 function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost();
   const sch=`<div class="sch2"><div></div>${EV.map((x,i)=>`<div class="sce ${i==g.ev?'on':''}">${STI[i]}<small>${x[0]}</small></div>`).join('')}${[0,1,2,3].map(w=>`<div class="scd ${w==g.wave?'on':w<g.wave?'done':''}">D${w+1}</div>${EV.map((x,i)=>{const tr=g.trs[w*5+i],hw=g.hist.find(z=>z.w==w&&z.e==i);if(w>g.wave)return `<div class="sct hid">?</div>`;return `<div class="sct ${w==g.wave&&i==g.ev?'cur':''} ${hw?'won':''}" style="background:${COL[tr.s]}">${RK[tr.r]}${SU[tr.s]}${hw?`<i style="background:${PC[hw.win]}"></i>`:''}</div>`}).join('')}`).join('')}</div>`;
-  const lane=i=>{const p=g.P[i],off=!p.bot&&!online(i);let cs='',lh='';
+  const lane=(i,dy)=>{const p=g.P[i],off=!p.bot&&!online(i);let cs='',lh='';
    if(ph=='show'){cs=p.pl.map(c=>cd(c,'flip')).join('');lh=hname(g.ks[i],g.ev)}
    else{cs=p.locked||p.bot?Array(k).fill(`<span class="bk big"><img src="${BACK}" alt=""></span>`).join(''):Array(k).fill('<span class="c ph"></span>').join('');lh=p.bot?'':p.locked?'locked ✓':off?'offline':'choosing…'}
    const win=ph=='show'&&i==g.win;
-   return `<div class="lane ${win?'win':''} ${off?'off':''}" style="--pc:${PC[i]}"><div class="ln">${chip(i)}<b>${esc(p.n)}</b>${p.bot?'🤖':''}${win?'🏆':''}<span class="lst">${g.cfg.nn?npts(g,i)+'★ ':''}${bk(p.hc)}</span></div><div class="lc">${cs}</div>${lh?`<div class="lh">${lh}</div>`:''}<div class="row trow">${[...p.tr].sort((a,b)=>b.r-a.r||a.s-b.s).map(t=>cd(t)).join('')}</div>${host&&off&&ph!='end'?`<button class="b sm" onclick="send({t:'botify',seat:${i}})">Let a bot play</button>`:''}</div>`};
-  const others=g.P.map((_,i)=>(me+1+i)%g.n).slice(0,g.n-1);
-  return `<div class="arena">${sch}<div class="lanes" style="grid-template-columns:repeat(${others.length},minmax(0,1fr))">${others.map(lane).join('')}</div>
-  <div class="lists"><div class="tro1">${tcd(T)}<small>${STI[g.ev]} ${e[0]} · D${g.wave+1}</small></div><div class="cm"><div class="sec">Community</div><div class="row">${[0,1,2,3,4].map(i=>g.comm[i]?cd(g.comm[i]):'<span class="c ph"></span>').join('')}</div></div></div>
+   return `<div class="lane ${win?'win':''} ${off?'off':''}" style="--pc:${PC[i]};margin-top:${dy||0}px"><div class="ln">${chip(i)}<b>${esc(p.n)}</b>${p.bot?'🤖':''}${win?'🏆':''}<span class="lst">${g.cfg.nn?npts(g,i)+'★ ':''}${bk(p.hc)}</span></div><div class="lc">${cs}</div>${lh?`<div class="lh">${lh}</div>`:''}<div class="row trow">${[...p.tr].sort((a,b)=>b.r-a.r||a.s-b.s).map(t=>cd(t)).join('')}</div>${host&&off&&ph!='end'?`<button class="b sm" onclick="send({t:'botify',seat:${i}})">Let a bot play</button>`:''}</div>`};
+  const others=g.P.map((_,i)=>(me+1+i)%g.n).slice(0,g.n-1),K=others.length,arc=j=>K<3?0:Math.round(Math.pow(Math.abs(j-(K-1)/2)/((K-1)/2),2)*12);
+  return `<div class="arena"><div class="herald">${sch}</div><div class="lanes ring ${K>=4?'tight':''}" style="grid-template-columns:${K==1?'minmax(0,230px)':`repeat(${K},minmax(0,1fr))`};justify-content:center">${others.map((i,j)=>lane(i,arc(j))).join('')}</div>
+  <div class="lists"><div class="tilt"></div><div class="evn">${STI[g.ev]} ${e[0]}, day ${g.wave+1}</div><div class="lrow"><div class="tro1">${tcd(T)}<small>Prize</small></div><div class="cm"><div class="row">${[0,1,2,3,4].map(i=>g.comm[i]?cd(g.comm[i]):'<span class="c ph"></span>').join('')}</div></div></div></div>
   ${ph=='show'?g.nlog.map(t=>`<div class="nl">👑 ${esc(t)}</div>`).join('')+(g.olog||[]).map(t=>`<div class="nl">🎯 ${esc(t)}</div>`).join(''):''}</div>`}
 
 function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),host=isHost(),k=e[1],nob=needOb(g,h0);let st='',wait='';
