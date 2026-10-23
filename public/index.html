@@ -410,8 +410,8 @@ function dragSetup(){const row=document.querySelector('.hand');if(!row)return;
 let TUT=null;
 const SUI={'♠':0,'♥':1,'♦':2,'♣':3},RKI={J:11,Q:12,K:13,A:14};
 const C=t=>({s:SUI[t.slice(-1)],r:RKI[t.slice(0,-1)]||+t.slice(0,-1)});
-const TUT_ME=['K♥','K♣','6♦','6♣','A♠','A♦','3♦','4♥','7♦','Q♥'],TUT_OPP=['8♦','8♣','J♣','J♥','J♠','5♦','2♦','2♥','10♣','9♣'];
-const TUT_COMM=['7♥','2♣','9♦','7♣','K♦'],TUT_OPP_PLAYS=[['8♦','8♣'],['J♣','J♥'],['J♠','5♦'],['2♦','2♥'],['10♣']],TUT_TROPHY=[1,3,1,1,1];
+const TUT_ME=['K♥','K♣','6♦','6♣','Q♠','A♦','3♦','4♥','7♦','Q♥'],TUT_OPP=['8♦','8♣','J♣','J♥','J♠','5♦','2♦','2♥','2♠','9♣'];
+const TUT_COMM=['7♥','2♣','9♦','7♣','K♦'],TUT_OPP_PLAYS=[['8♦','8♣'],['J♣','J♥'],['J♠','5♦'],['2♦','2♥'],['2♠']],TUT_TROPHY=[1,3,1,1,1];
 const TUT_INTRO=[
  {hl:'table',t:'Welcome to the tournament!',x:'You face Sir Roland in five events. In each one you both secretly play cards from your hand, and the best poker hand wins that event\'s trophy. First, the cards are dealt.'},
  {hl:'hand',t:'The deal',x:'The dealer deals you and Sir Roland 10 cards each. Watch them land in your hand at the bottom of the screen: these are your cards for the whole wave, and only you can see them.',deal:true},
@@ -430,35 +430,38 @@ function tutStep(){if(!TUT)return{};const g=TUT.g,ev=g.ev,k=EV[ev][1];
  if(TUT.stage<TUT_INTRO.length)return Object.assign({a:'next'},TUT_INTRO[TUT.stage]);
  if(TUT.done){const p=g.P[0],tr=p.tr.map(TSTR).join(' '),kept=p.hand.map(TSTR).join(' ');
   return {a:'end',hl:'',t:'Wave complete!',x:`You won ${p.tr.length} troph${p.tr.length==1?'y':'ies'}${tr?' ('+tr+')':''}${npts(g,0)?` and ${npts(g,0)} points from the Baron`:''}. Your ${kept} carries into the next wave, where you\'re dealt 9 fresh cards to join it. A full game is four waves, and your best five trophies score at the end. Remember: win cheaply, throw away cards you don\'t need when you can\'t win, and save cards for the events and nobles you want most.`}}
- const pick=g.phase=='pick',kk=has('K♥')&&has('K♣'),aS=has('A♠'),aa=aS&&has('A♦'),qh=has('Q♥'),sv=has('7♦');
+ const pick=g.phase=='pick',kk=has('K♥')&&has('K♣'),qs=has('Q♠'),qq=qs&&has('Q♥'),ad=has('A♦'),qh=has('Q♥'),sv=has('7♦');
  const tap=` Select ${k==1?'1 card':'2 cards'} to play, then tap Lock in.`;
- if(ev==1&&pick&&!TUT.nobleIntro)return{a:'next',nobleIntro:true,hl:'noble',t:'A noble arrives!',x:'The Baron takes his seat in the stands. At the Joust, the event after this one, he gives a crown worth 4 points to whoever plays the highest Spade. '+(aS?'You hold the A♠, the best Spade there is, so his crown could be yours.':'You already played your A♠, the best Spade there is. Sir Roland may take his crown.')+' Tap the Baron any time to read his card.'};
+ if(ev==1&&pick&&!TUT.nobleIntro)return{a:'next',nobleIntro:true,hl:'noble',t:'A noble arrives!',x:'The Baron takes his seat in the stands. At the Joust, the event after this one, he gives a crown worth 4 points to whoever plays the highest Spade. '+(qs?'You hold the Q♠. It\'s a good Spade, but not the best: a K♠ or A♠ would beat it, and you can\'t see Sir Roland\'s hand. Going for his crown is a gamble.':'You already played your Q♠, your best Spade. Sir Roland may take his crown.')+' Tap the Baron any time to read his card.'};
  if(pick){let x='';
   if(ev==0)return{a:'choose',hl:'hand',t:'Event 1: Archery, your choice',x:'Play 2 cards with no community cards: a pair beats no pair. Your Kings will surely win this. Your 6s might not, but saved Kings could make a much bigger hand later. Or throw away two cards you don\'t need: you lose this one, but keep both pairs. Pick one, then tap Lock in.',o:[{l:'Kings: win now',c:['K♥','K♣']},{l:'6s: save the Kings',c:['6♦','6♣']},{l:'3♦ 4♥: throw away',c:['3♦','4♥']}]};
-  if(ev==1)x='The dealer lays three community cards in the middle. Everyone shares them, and your 2 cards join them for the best 5-card hand. More community cards come in later events, so a card that looks weak now can be strong later.'+(aa?' A♠ with A♦ is a pair of Aces, strong enough to win here. But the A♠ is also the Baron\'s Spade at the Joust (4 points). Win now, or save it and play two cards you don\'t need?':aS?' Your A♠ is the Baron\'s Spade at the Joust (4 points), so think about saving it.':'')+(kk?' Your Kings could win here too, if you\'re willing to spend them.':'');
-  if(ev==2)x='The dealer adds a fourth community card: two 7s are on the table now.'+(sv?' Your 7♦ would make three of a kind.':'')+(aS?' Your A♠ is the highest Spade for the Baron\'s crown.':' Without your A♠, Sir Roland may take the Baron\'s crown.')+(qh?' Your Q♥ is a high card on its own. Champion, the last event, is played with one card, so it may be worth saving.':'');
-  if(ev==3)x='The dealer adds the fifth community card: a King!'+(kk?' Your Kings now make a full house: three Kings and two 7s.':'')+' After this event you play just one card, so think about which single card to keep for Champion.';
+  if(ev==1)x='The dealer lays three community cards in the middle. Everyone shares them, and your 2 cards join them for the best 5-card hand. More community cards come in later events, so a card that looks weak now can be strong later.'+(qq?' Q♠ with Q♥ is a pair of Queens, strong enough to win here. But the Q♠ is also your best shot at the Baron\'s crown at the Joust (4 points), if nobody plays a higher Spade. Win now, or save it and play two cards you don\'t need?':qs?' Your Q♠ is your best shot at the Baron\'s crown at the Joust (4 points), so think about saving it.':'')+(kk?' Your Kings could win here too, if you\'re willing to spend them.':'');
+  if(ev==2)x='The dealer adds a fourth community card: two 7s are on the table now.'+(sv?' Your 7♦ would make three of a kind. It also matches the table, which makes it a strong card to save for Champion, and with two 7s already out, a high card might be enough here.':'')+(qs?' Your Q♠ is your best Spade for the Baron\'s crown, but a higher Spade would beat it.':' Without a good Spade, Sir Roland may take the Baron\'s crown.')+'';
+  if(ev==3)x='The dealer adds the fifth community card: a King!'+(kk?' Your Kings now make a full house: three Kings and two 7s.':'')+' After this event you play just one card, so think about which single card to keep for Champion: a card that matches the table counts most.';
   if(ev==4)x='Play just 1 card. Only what your card makes with the community cards counts, so a pair already on the table doesn\'t help anyone. Match a community card for a pair, or play your highest card. The card you don\'t play stays in your hand for the next wave.';
   return{a:'play',hl:ev==0?'hand':'comm',t:'Event '+(ev+1)+': '+TNAME[ev][0].toUpperCase()+TNAME[ev].slice(1),x:x+tap}}
  const won=g.win===0,mine=g.P[0].pl,his=g.P[1].pl,md=handDesc(mine,g.ks[0],ev),hd=handDesc(his,g.ks[1],ev);
  const art=d=>/^(pair|full|flush)|straight$/.test(d)?'a '+d:d;
  let x=md==hd?(won?`You both have ${art(md)}, and your other cards are higher.`:`You both have ${art(md)}, but his other cards are higher.`):won?`You win with ${art(md)} against his ${hd}.`:`He wins with ${art(hd)} against your ${md}.`;
- const any=(ts)=>ts.some(t=>played(ev,t)),good=['K♥','K♣','A♠','A♦','Q♥','7♦'];
+ const any=(ts)=>ts.some(t=>played(ev,t)),good=['K♥','K♣','Q♠','A♦','Q♥','7♦'];
  if(ev==0){if(played(0,'K♥')&&played(0,'K♣'))x+=' A trophy now, but your Kings are spent.';
   else if(kk)x+=won?' And your Kings are still in your hand!':' But your Kings are still in your hand. Watch what they can become later.';
   if(!won&&!any(good)&&!played(0,'6♦'))x+=' You lost with cards you didn\'t need and kept your good ones. Playing a bad hand is a real choice.'}
- if(ev==1){if(played(1,'A♠'))x+=' But your A♠ is gone, so the Baron\'s crown at the Joust is up for grabs.';else if(aS)x+=' You kept the A♠ for the Baron\'s crown at the Joust.';
+ if(ev==1){if(played(1,'Q♠'))x+=' But your Q♠ is gone, so the Baron\'s crown at the Joust is up for grabs.';else if(qs)x+=' You kept the Q♠ for a shot at the Baron\'s crown at the Joust.';
   if(!won&&!any(good))x+=' When you\'re not going for an event, play cards you don\'t need.';
   if(!won&&played(1,'7♦'))x+=' If you had waited: at the Joust the dealer adds another 7, and your 7♦ would have made three 7s.';
   if(!won&&played(1,'Q♥'))x+=' Your Q♥ would also have been a strong single card for Champion.'}
  if(ev==2){const mineC=g.cl.some(c=>c.p==0),hisC=g.cl.some(c=>c.p==1);
-  if(mineC)x+=' And the Baron gives you his crown: 4 points!'+(TUT.ch[1]&&!played(1,'A♠')&&!playedBefore(2,'A♠')?' Saving the A♠ paid off.':'');
-  else if(hisC)x+=' Sir Roland\'s J♠ was the highest Spade, so he takes the Baron\'s crown (4 points).'+(aS?' You still hold the A♠: it would have won the crown.':playedBefore(2,'A♠')?' Your A♠, played earlier, would have won it.':'');
-  if(played(2,'Q♥'))x+=' You also spent your Q♥, a great single card for Champion.';else if(qh)x+=' Your Q♥ is still saved for Champion.'}
+  if(mineC)x+=' And the Baron gives you his crown: 4 points! Your Q♠ beat his J♠, but a K♠ or A♠ would have beaten you. Your gamble paid off.';
+  else if(hisC)x+=' Sir Roland\'s J♠ was the highest Spade, so he takes the Baron\'s crown (4 points).'+(qs?' You still hold the Q♠: it would have beaten his J♠.':playedBefore(2,'Q♠')?' Your Q♠, played earlier, would have beaten his J♠.':'');
+  if(played(2,'7♦'))x+=' You used your 7♦ here. It also matches the table, so it would have been a strong card at Champion.';else if(sv)x+=' Your 7♦ is still saved, and it matches the table: a strong card for Champion.'}
  if(ev==3){if(won&&played(3,'K♥')&&played(3,'K♣'))x+=' Saving your Kings paid off.';
   else if(!won&&kk)x+=' Your Kings would have made a full house here, and they\'re still in your hand!';
   else if(!won&&(playedBefore(3,'K♥')||playedBefore(3,'K♣')))x+=' Your Kings would have made a full house here.'}
- if(ev==4){const kept=g.P[0].hand.map(TSTR).join(' ');x+=` You keep the ${kept} for the next wave.`;if(!won)x+=' A strong single card, a high one or one that matches the table, is worth saving for Champion.'}
+ if(ev==4){const kept=g.P[0].hand.map(TSTR).join(' '),mk=g.ks[0][0]>0,alt=['7♦','K♥','K♣'].find(t=>playedBefore(4,t));
+  if(won&&mk)x+=' Your card matched the table, and that beats his pair of 2s. Saving it paid off.';
+  if(!won)x+=' Sir Roland saved a low 2 that matches the 2 on the table, and a pair beats any single high card.'+(alt?` If you had kept your ${alt}, it would have matched the table and won.`:' Save a card that matches the table for Champion.');
+  x+=` You keep the ${kept} for the next wave.`}
  return{a:'cont',hl:ev==2?'noble':'',t:won?`You win the ${trophyName(ev)}!`:`Sir Roland takes the ${trophyName(ev)}`,x}}
 function tutAllowed(){const a=tutStep().a;return a=='play'||a=='choose'}
 function tutView(){const g=TUT.g;G=HZ.view(g,0);G.P[1].bot=true;S.room.cfg=g.cfg;syncHand()}
