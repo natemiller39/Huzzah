@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>HUZZAH! Tournament of Champions</title>
 <script>if(location.hostname=="huzzah-l7ce.onrender.com")location.replace("https://huzzah-online.onrender.com/"+location.search)</script>
-<meta name="theme-color" content="#2f7d58"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&display=swap"><meta name="description" content="HUZZAH! The Tournament of Champions: a poker-inspired card game for 2 to 6 players. Play online with friends.">
+<meta name="theme-color" content="#2f7d58"><link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="icon.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&display=swap"><meta name="description" content="HUZZAH! The Tournament of Champions: a poker-inspired card game for 2 to 6 players. Play online with friends.">
 <style>
 
 :root{--bg:#2f7d58;--bg2:#3f9970;--fg:#f6f0dc;--box:rgba(0,0,0,.26);--bd:rgba(255,255,255,.2);--ac:#f2c14e;--card:#fffdf7;--cw:52px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -210,6 +210,39 @@ button.b.sm{font-size:12px;padding:5px 9px;margin:0}
 /* big readable rank + suit on every card */
 .c.art{position:relative}
 .c .ix{position:absolute;left:0;top:0;z-index:1;display:block;min-width:calc(var(--cw)*.36);padding:calc(var(--cw)*.03) calc(var(--cw)*.04) calc(var(--cw)*.05);background:rgba(16,14,28,.88);border-radius:4px 0 7px 0;font-style:normal;font-weight:900;font-family:system-ui,-apple-system,sans-serif;font-size:max(9px,calc(var(--cw)*.3));line-height:.95;text-align:center;letter-spacing:-.5px;pointer-events:none}
+
+/* home: tournament herald (after the painted SQUIRE box: checkered border, blue pennant, cream lines) */
+html.onhome,html.onhome body{background:#c9b48a repeating-conic-gradient(#1b3a80 0 25%,#d8c49a 0 50%) 0 0/44px 44px fixed}
+html.onhome #app{padding:10px 10px 14px}
+.home2{position:relative;max-width:420px;margin:0 auto;padding:0 12px 10px;text-align:center;--royal:#1b3a80;--cream:#f3e7c8;--gold:#e3b43f;--ink:#2b1d0d;
+ background:linear-gradient(#e9dab4,#d9c398);border-radius:6px;box-shadow:0 0 0 3px var(--cream),0 0 0 7px var(--royal),0 10px 26px rgba(0,0,0,.5);color:var(--ink)}
+.home2::before{content:'';position:absolute;inset:7px;border:1.5px solid rgba(27,58,128,.45);border-radius:3px;pointer-events:none}
+.hbw{position:relative;width:112px;margin:0 auto;padding-top:2px;filter:drop-shadow(0 6px 7px rgba(0,0,0,.4))}
+.hbw .pole{height:8px;margin:0 -14px;border-radius:5px;background:linear-gradient(#9a6a35,#5a3719);position:relative;z-index:2}
+.hbw .pole::before,.hbw .pole::after{content:'';position:absolute;top:-3px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a3,#b98b23)}
+.hbw .pole::before{left:-6px}.hbw .pole::after{right:-6px}
+.pen1{margin-top:-2px;padding:4px;background:#17387d;clip-path:polygon(0 0,100% 0,100% 86%,50% 100%,0 86%)}
+.pen2{padding:2px;background:var(--cream);clip-path:polygon(0 0,100% 0,100% 86%,50% 100%,0 86%)}
+.pen2 img{display:block;width:100%;height:auto;clip-path:polygon(0 0,100% 0,100% 86%,50% 100%,0 86%)}
+.hrules{position:absolute;top:14px;right:14px;margin:0;z-index:3;border:1.5px solid var(--royal);background:var(--cream);color:var(--royal);border-radius:8px;padding:5px 9px;font:600 13px system-ui,sans-serif;box-shadow:0 2px 0 rgba(27,58,128,.5)}
+.hsub{font-family:"IM Fell English SC",Georgia,serif;font-size:16px;color:var(--royal);margin:2px 0 6px}
+.hrow{display:flex;gap:8px;align-items:stretch}
+.home2 input{font:inherit;font-size:16px;min-width:0;width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1.5px solid #a9884a;background:#fffaf0;color:var(--ink)}
+.home2 input.code{text-transform:uppercase;letter-spacing:5px;text-align:center;font-weight:800;flex:1}
+.home2 .b{display:block;width:100%;margin:0;padding:9px 12px;font-size:16px;border-radius:9px;background:var(--gold);color:#2a1d07;box-shadow:0 2px 0 #8a6a2a}
+.home2 .b.blue{background:var(--royal);color:var(--cream);box-shadow:0 2px 0 #0d1f48}
+.home2 .tutb{display:flex;align-items:center;gap:10px;text-align:left;margin:6px 0;padding:7px 12px;border:2px solid #fff3c4;background:linear-gradient(#f3cd62,#d9a531);font-size:12px;font-weight:600}
+.home2 .tutb b{display:block;font-size:16px;font-weight:800}.home2 .tsw{font-size:24px;line-height:1}
+.hpan{background:rgba(255,250,236,.7);border:1.5px solid rgba(27,58,128,.35);border-radius:10px;padding:5px 10px 9px;margin:6px 0 0;text-align:left}
+.hpan h2{font-family:"IM Fell English SC",Georgia,serif;font-weight:400;text-transform:none;letter-spacing:0;color:var(--royal);font-size:17px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.hpan h2::before,.hpan h2::after{content:'';flex:1;height:1.5px;background:linear-gradient(90deg,transparent,rgba(27,58,128,.5),transparent)}
+.hpan .b.jn{width:auto;flex:0 0 auto;padding:10px 14px}
+.hpan .or{font-size:12px;color:#6b5733;text-align:center;margin:3px 0}
+.practice .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-bottom:7px}.practice .pgrid .opts{display:contents}
+.practice .opts label{display:flex;flex-direction:column;align-items:stretch;gap:1px;font-size:12px;color:#5a4527;margin:0}
+.practice .opts select{min-width:0;width:100%;font-size:15px;padding:4px 6px;border-radius:7px;border:1.5px solid #a9884a;background:#fffaf0;color:var(--ink)}
+.practice .opts select:disabled{opacity:.55}
+@media (max-height:620px){.hbw{width:76px}.hsub{font-size:14px;margin:0 0 4px}.hpan .or{display:none}.hpan .b.blue{margin-top:6px}.home2 .tutb{padding:5px 12px}.hrules{top:12px}}
 </style></head><body><div id="app"></div>
 <script src="assets.js"></script>
 <script src="engine.js?v=29"></script>
@@ -294,19 +327,25 @@ function buildHTML(){let h='';
   if(!connected&&!TUT)h+=`<div class="conn">${S?'Connection lost. Reconnecting…':'Connecting to the HUZZAH! server…'}</div>`;
   if(!S)h+=homeHTML();else if(!G)h+=lobbyHTML();else h+=gameHTML();return h}
 function render(){const app=document.getElementById('app');
-  app.className=TUT?'tut hl-'+(tutStep().hl||''):'';app.style.zoom='';FIT_SHRINK=0;app.innerHTML=buildHTML();
+  app.className=TUT?'tut hl-'+(tutStep().hl||''):'';document.documentElement.classList.toggle('onhome',!S&&!TUT);app.style.zoom='';FIT_SHRINK=0;app.innerHTML=buildHTML();
   if(G&&G.phase!='end'){const de=document.documentElement,avail=viewH();let over=de.scrollHeight-avail;
     if(over>0){FIT_SHRINK=over;app.innerHTML=buildHTML();over=de.scrollHeight-avail}
     if(over>0)app.style.zoom=Math.max(0.6,avail/de.scrollHeight).toFixed(3)}
   if(G)dragSetup();if(TUT)tutAfterRender()}
 
 function homeHTML(){const nm=esc(LS.get().name||'');
-  return `<div class="home"><h1>HUZZAH!</h1><div style="font-size:13px;opacity:.85">The Tournament of Champions · 2 to 6 players</div><button class="b tutb" onclick="startTut()">New to HUZZAH? Play the 2-minute tutorial</button>
-  <div class="box"><h2>Your name</h2><input id="nm" maxlength="16" placeholder="Name" value="${nm}" autocomplete="nickname" oninput="LS.set({name:this.value})"></div>
-  <div class="box"><h2>Join friends</h2><input id="jc" class="code" maxlength="4" placeholder="CODE" value="${esc(jcode)}" oninput="jcode=this.value" autocapitalize="characters" autocomplete="off"><button class="b" onclick="join()">Join game</button></div>
-  <div class="box"><h2>Host a game</h2><button class="b" onclick="create()">Create game</button><div class="hint">You'll get a room code to share with friends.</div></div>
-  <div class="box"><h2>Practice vs bots</h2><div class="opts"><label><span>Players</span><select onchange="soloSize=+this.value">${[2,3,4,5,6].map(v=>`<option ${v==soloSize?'selected':''}>${v}</option>`).join('')}</select></label></div>${mainOpts(soloCfg,'','setSolo')}<button class="b ghost" onclick="solo()">Play solo vs bots</button></div>
-  <button class="b ghost" style="margin-top:10px" onclick="rules(1)">How to play</button></div>`}
+  return `<div class="home2">
+  <button class="hrules" onclick="rules(1)">📜 Rules</button>
+  <div class="hbw"><div class="pole"></div><div class="pen1"><div class="pen2"><img src="logo.webp" alt="HUZZAH!" width="520" height="731"></div></div></div>
+  <p class="hsub">The Tournament of Champions · 2 to 6 players</p>
+  <input id="nm" maxlength="16" placeholder="Your name, champion" aria-label="Your name" value="${nm}" autocomplete="nickname" oninput="LS.set({name:this.value})">
+  <button class="b tutb" onclick="startTut()"><span class="tsw">⚔️</span><span>New to HUZZAH?<b>Play the 2-minute tutorial</b></span></button>
+  <div class="hpan box"><h2>Play with friends</h2>
+   <div class="hrow"><input id="jc" class="code" maxlength="4" placeholder="CODE" aria-label="Room code" value="${esc(jcode)}" oninput="jcode=this.value" autocapitalize="characters" autocomplete="off"><button class="b jn" onclick="join()">Join game</button></div>
+   <div class="or">or host your own and share the code</div>
+   <button class="b blue" onclick="create()">Create game</button></div>
+  <div class="hpan box practice"><h2>Practice vs bots</h2><div class="pgrid"><div class="opts"><label><span>Players</span><select onchange="soloSize=+this.value">${[2,3,4,5,6].map(v=>`<option ${v==soloSize?'selected':''}>${v}</option>`).join('')}</select></label></div>${mainOpts(soloCfg,'','setSolo')}</div><button class="b blue" onclick="solo()">Play solo vs bots</button></div>
+  </div>`}
 
 const OPT_NN=[[0,'Off'],[1,'1'],[2,'2'],[3,'3']],OPT_OD=[[0,'Off'],[1,'Deal 1'],[2,'Deal 2, keep 1'],[3,'Deal 3, keep 1']],OPT_RF=[[0,'Off'],[1,'Once per player'],[99,'Unlimited']];
 const opts=(list,v)=>list.map(([x,t])=>`<option value="${x}" ${x==v?'selected':''}>${t}</option>`).join('');
