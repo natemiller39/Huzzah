@@ -170,6 +170,25 @@ button.b.sm{font-size:12px;padding:5px 9px;margin:0}
 .res2{background:rgba(0,0,0,.18);border-radius:10px;padding:6px 8px;margin:6px 0}.res2.win{background:rgba(242,193,78,.2);outline:1px solid var(--ac)}
 .rh{display:flex;align-items:center;gap:6px}.rh .rk{font-weight:800;width:16px;text-align:center}.rh b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh .rt{font-weight:800;font-size:16px}
 .rc{display:flex;gap:3px;margin:5px 0 3px}.rc .c{--cw:34px}.rd{font-size:12px;opacity:.9}
+
+.copts{display:flex;gap:6px;margin-top:7px}.copts .cop{flex:1;margin:0;padding:8px 6px;font-size:14px;background:#fff8e4;color:#3a2810;border:2px solid #c9a866}.copts .cop.on{background:#e3b43f;border-color:#8a6a3a}
+.chint{font-size:11px;opacity:.7;margin-top:4px;text-align:center}
+.coach p{font-size:13.5px}
+.tbl.k1 .pseat{width:132px}
+.tut .canopy{display:none}.tut .stands{border-radius:10px}.tut .stands .rbox{padding-top:6px}.tut .ctr .evn{display:none}
+.tut .coach p{margin-top:2px;font-size:13px;line-height:1.33}.tut .coach .cht{font-size:17px}.tut .coach{padding:7px 10px 8px}.tut .copts .cop{padding:7px 6px}.tut .hsec{margin-top:0}.tut .hand{padding-top:20px}
+/* tutorial */
+.tutb{display:block;width:100%;margin:10px 0 2px;padding:11px 14px;font-size:16px;background:#efe2c0;color:#3a2810;border:2px solid #e3b43f}
+.coach{position:relative;z-index:6;background:#efe2c0;color:#2b1d0d;border:2px solid #e3b43f;border-radius:10px;padding:8px 11px 9px;margin:6px 0 4px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.coach .ch{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.coach .cht{font-family:"IM Fell English SC",Georgia,serif;font-size:18px}.coach .chn{font-size:11px;opacity:.6}
+.coach p{margin:3px 0 0;font-size:14px;line-height:1.4}.coach .cb{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}.coach .cb .b{margin:0}.coach .b.ghost{color:#3a2810;border-color:#8a6a3a}
+.tut .hand .c.tdim{filter:brightness(.5) saturate(.6)}
+.tut .hand .c.tglow{box-shadow:0 0 0 3px #ffd24a,0 0 16px #ffd24a}
+@keyframes tpulse{50%{box-shadow:0 0 0 4px #ffd24a,0 0 22px #ffd24a}}
+.hl-noble .stands .nob,.hl-prize .prize .c,.hl-comm .ctr .cm .c:not(.ph){animation:tpulse 1.2s ease-in-out infinite}
+.hl-table .tbl .top{animation:tpulse 1.2s ease-in-out infinite}
+.hl-hand .hand{animation:none}.hl-hand .hsec{color:#ffd24a;font-weight:700}
+@media (prefers-reduced-motion:reduce){.hl-noble .stands .nob,.hl-prize .prize .c,.hl-comm .ctr .cm .c,.hl-table .tbl .top{animation:none;box-shadow:0 0 0 3px #ffd24a}}
 </style></head><body><div id="app"></div>
 <script src="assets.js"></script>
 <script src="engine.js?v=29"></script>
@@ -197,12 +216,12 @@ function connect(){
   ws.onclose=()=>{connected=false;render();setTimeout(connect,Math.min(8000,600*(++retry)))};
   ws.onmessage=e=>{const m=JSON.parse(e.data);
     if(m.t=='joined'){LS.set({code:m.code,token:m.token});history.replaceState(null,'',location.pathname)}
-    else if(m.t=='state'){S=m;G=m.g;syncHand();render()}
+    else if(m.t=='state'){if(TUT)return;S=m;G=m.g;syncHand();render()}
     else if(m.t=='error')toast(m.msg);
     else if(m.t=='gone'){LS.del('code');LS.del('token');S=null;G=null;render()}
     else if(m.t=='kicked'){LS.del('code');LS.del('token');S=null;G=null;toast(m.msg);render()}};
 }
-const send=m=>{if(ws&&ws.readyState==1)ws.send(JSON.stringify(m));else toast('Still connecting… try again in a moment.')};
+const send=m=>{if(TUT)return tutSend(m);if(ws&&ws.readyState==1)ws.send(JSON.stringify(m));else toast('Still connecting… try again in a moment.')};
 function toast(t){let d=document.getElementById('toast');if(!d){d=document.createElement('div');d.id='toast';d.className='toast';document.body.appendChild(d)}d.textContent=t;d.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>d.style.display='none',3500)}
 
 /* ---------- my hand (local order + selection) ---------- */
@@ -220,8 +239,8 @@ function create(){const n=myName();if(!n)return needName();send({t:'create',name
 function solo(){const n=myName()||'You';send({t:'solo',name:n,size:soloSize,cfg:soloCfg})}
 function join(){const n=myName();if(!n)return needName();const c=(document.getElementById('jc').value||'').trim().toUpperCase();if(c.length!=4)return toast('Enter the 4-letter room code.');send({t:'join',code:c,name:n})}
 function needName(){toast('Enter your name first.');const e=document.getElementById('nm');if(e)e.focus()}
-function leave(){if(G&&G.phase!='end'&&!confirm('Leave this game? A bot will take over your seat.'))return;send({t:'leave'});LS.del('code');LS.del('token');S=null;G=null;render()}
-function pick(i){if(Date.now()-dragAt<400||!G||G.phase!='pick')return;const p=myP();if(p.sel||needOb(G,p))return;const k=order[i],j=sel.indexOf(k);if(j>=0)sel.splice(j,1);else if(sel.length<EV[G.ev][1])sel.push(k);render()}
+function leave(){if(TUT)return exitTut();if(G&&G.phase!='end'&&!confirm('Leave this game? A bot will take over your seat.'))return;send({t:'leave'});LS.del('code');LS.del('token');S=null;G=null;render()}
+function pick(i){if(Date.now()-dragAt<400||!G||G.phase!='pick')return;if(TUT&&!tutMayTap(order[i]))return;const p=myP();if(p.sel||needOb(G,p))return;const k=order[i],j=sel.indexOf(k);if(j>=0)sel.splice(j,1);else if(sel.length<EV[G.ev][1])sel.push(k);render()}
 function lockIn(){if(sel.length!=EV[G.ev][1])return;send({t:'play',cards:selCards().map(c=>({s:c.s,r:c.r}))})}
 function unlock(){send({t:'unplay'})}
 const vw=()=>Math.min(document.documentElement.clientWidth||innerWidth,screen&&screen.width?screen.width:9999,innerWidth);
@@ -248,12 +267,12 @@ const isHost=()=>S&&S.room.you==S.room.host;
 
 /* ---------- screens ---------- */
 function render(){const app=document.getElementById('app');let h='';
-  if(!connected)h+=`<div class="conn">${S?'Connection lost. Reconnecting…':'Connecting to the HUZZAH! server…'}</div>`;
+  if(!connected&&!TUT)h+=`<div class="conn">${S?'Connection lost. Reconnecting…':'Connecting to the HUZZAH! server…'}</div>`;
   if(!S)h+=homeHTML();else if(!G)h+=lobbyHTML();else h+=gameHTML();
-  app.innerHTML=h;if(G)dragSetup()}
+  app.className=TUT?'tut hl-'+(tutStep().hl||''):'';app.innerHTML=h;if(G)dragSetup();if(TUT)tutAfterRender()}
 
 function homeHTML(){const nm=esc(LS.get().name||'');
-  return `<div class="home"><h1>HUZZAH!</h1><div style="font-size:13px;opacity:.85">The Tournament of Champions · 2 to 6 players</div>
+  return `<div class="home"><h1>HUZZAH!</h1><div style="font-size:13px;opacity:.85">The Tournament of Champions · 2 to 6 players</div><button class="b tutb" onclick="startTut()">New to HUZZAH? Play the 2-minute tutorial</button>
   <div class="box"><h2>Your name</h2><input id="nm" maxlength="16" placeholder="Name" value="${nm}" autocomplete="nickname" oninput="LS.set({name:this.value})"></div>
   <div class="box"><h2>Join friends</h2><input id="jc" class="code" maxlength="4" placeholder="CODE" value="${esc(jcode)}" oninput="jcode=this.value" autocapitalize="characters" autocomplete="off"><button class="b" onclick="join()">Join game</button></div>
   <div class="box"><h2>Host a game</h2><button class="b" onclick="create()">Create game</button><div class="hint">You'll get a room code to share with friends.</div></div>
@@ -291,7 +310,7 @@ function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[
 function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost();
   const sch=`<div class="sch2"><div></div>${EV.map((x,i)=>`<div class="sce ${i==g.ev?'on':''}">${STI[i]}<small>${x[0]}</small></div>`).join('')}${[0,1,2,3].map(w=>`<div class="scd ${w==g.wave?'on':w<g.wave?'done':''}">D${w+1}</div>${EV.map((x,i)=>{const tr=g.trs[w*5+i],hw=g.hist.find(z=>z.w==w&&z.e==i);if(w>g.wave)return `<div class="sct hid">?</div>`;return `<div class="sct ${w==g.wave&&i==g.ev?'cur':''} ${hw?'won':''}" style="background:${COL[tr.s]}">${RK[tr.r]}${SU[tr.s]}${hw?`<i style="background:${PC[hw.win]}"></i>`:''}</div>`}).join('')}`).join('')}</div>`;
   const others=g.P.map((_,i)=>(me+1+i)%g.n).slice(0,g.n-1),K=others.length;
-  const H=K>=4?356:336,cy=Math.round(H/2+4),ry=Math.round(H/2-44),rowTop=cy+2,W=Math.min(vw(),680)-12,cx=W/2,rx=W/2-(K>=4?36:42),D=K>=4?64:78;
+  const H=K>=4?356:K==1&&TUT?282:336,cy=Math.round(H/2+4),ry=Math.round(H/2-44),rowTop=cy+2,W=Math.min(vw(),680)-12,cx=W/2,rx=W/2-(K>=4?36:42),D=K>=4?64:78;
   const backs=(n,cls='')=>Array(n).fill(`<span class="c tb ${cls}"></span>`).join('');
   const fan=n=>{const m=Math.min(n,6);return `<div class="fan">${Array.from({length:m},(_,q)=>`<i style="--r:${((q-(m-1)/2)*13).toFixed(0)}deg"></i>`).join('')}<b>${n}</b></div>`};
   let seats='',spots='';
@@ -306,7 +325,7 @@ function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost
   else{const sc=selCards();mine=sc.map(c=>cd(c,'land',h0.sel?'':`pick(${order.indexOf(ck(c))})`)).join('')+Array(k-sc.length).fill('<span class="c ph"></span>').join('')}
   const myspot=`<div class="spot me ${ph=='show'&&g.win==me?'win':''}" style="left:50%;top:${H-40}px;--pc:${PC[me]}"><div class="cs">${mine}</div>${ml?`<small>${ml}</small>`:h0.sel?'<small>Locked in</small>':''}</div>`;
   const ctr=`<div class="ctr" style="top:${rowTop}px"><div class="lrow"><div class="tro1 prize" title="Trophy for this event">${tcd(T)}</div><div class="cm"><div class="row">${[0,1,2,3,4].map(i=>g.comm[i]?cd(g.comm[i]):'<span class="c ph"></span>').join('')}</div></div></div><div class="evn">${STI[g.ev]} ${e[0]}, day ${g.wave+1}</div></div>`;
-  return `<div class="herald">${sch}</div><div class="tbl ${K>=4?'k4':''}" style="height:${H}px"><div class="top"></div><div class="tilt" style="top:${rowTop+30}px"></div>${seats}${spots}${ctr}${myspot}</div>
+  return `${TUT?'':`<div class="herald">${sch}</div>`}<div class="tbl ${K>=4?'k4':''} ${K==1?'k1':''}" style="height:${H}px"><div class="top"></div><div class="tilt" style="top:${rowTop+30}px"></div>${seats}${spots}${ctr}${myspot}</div>
   ${ph=='show'?g.nlog.map(t=>`<div class="nl">👑 ${esc(t)}</div>`).join('')+(g.olog||[]).map(t=>`<div class="nl">🎯 ${esc(t)}</div>`).join(''):''}`}
 
 function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),host=isHost(),k=e[1],nob=needOb(g,h0);let st='',wait='';
@@ -319,7 +338,8 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   if(ph=='show'){st=`${g.win==me?'You win':esc(g.P[g.win].n)+' wins'} the trophy!`;if(h0.cont){const w=names(i=>!g.P[i].cont&&online(i));wait=w.length?'Waiting for '+w.join(', '):''}}
   if(ph=='end')st='Tournament over!';
   const tro=p=>[...p.tr].sort((a,b)=>b.r-a.r||a.s-b.s);
-  let h=`<div class="topbar"><button class="b sm ghost" onclick="leave()">Leave</button><b class="ttl">HUZZAH!</b><span>Room <b>${S.room.code}</b> <button class="b sm ghost" onclick="scores(1)">Scores</button> <button class="b sm ghost" onclick="rules(1)">Rules</button></span></div>`;
+  let h=`<div class="topbar"><button class="b sm ghost" onclick="leave()">Leave</button><b class="ttl">HUZZAH!</b><span>${TUT?'<b>Tutorial</b>':`Room <b>${S.room.code}</b>`} <button class="b sm ghost" onclick="scores(1)">Scores</button> <button class="b sm ghost" onclick="rules(1)">Rules</button></span></div>`;
+  if(TUT)h+=coachHTML();
   h+=nobHTML();
   if(ph!='end')h+=arenaHTML(T);
   else{const r=ranking(g),sm=g.cfg.sm;
@@ -328,12 +348,13 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   if(ph=='pick')btn=h0.sel?`<button class="b" onclick="unlock()">Change</button>`:`<button class="b" onclick="lockIn()" ${sel.length==k&&!nob?'':'disabled'}>Lock in</button>`;
   if(ph=='show')btn=h0.cont?`<button class="b" disabled>Waiting…</button>`:`<button class="b" onclick="cont()">${g.ev==4?(g.wave==3?'Final scores':'Next day'):'Continue'}</button>`;
   if(ph=='end')btn=host?`<button class="b" onclick="send({t:'again'})">Play again</button><button class="b ghost" onclick="send({t:'lobby'})">Lobby</button>`:`<button class="b ghost" onclick="leave()">Leave</button>`;
+  if(TUT&&tutStep().a=='end')btn='';
   const win=ph=='show'&&g.win==me;
   h+=`<div class="you ${win?'win':''}" style="--pc:${PC[me]}"><div class="yl"><div class="ln">${chip(me)}<b>You</b>${win?'🏆':''}<span class="lst">${h0.tr.length}🏆${g.cfg.nn?' '+npts(g,me)+'★':''}</span></div><div id="st">${st}${wait?`<div class="wait">${wait}</div>`:''}${ph=='end'&&!host?'<div class="wait">The host can start a rematch.</div>':''}</div><div class="row trow">${hpill()}${tro(h0).map(tcd).join('')}</div></div><div class="yb">${obChip()}${btn}</div></div>`;
   if(ph!='end'){const hid=nob&&!g.hist.length;
    const n=h0.hand.length,HW=Math.min(vw(),680)-16,CW=58,EDGE=20,STEP=n>1?Math.max(20,Math.min(CW-6,(HW-CW-2*EDGE)/(n-1))):0,fanS=i=>{const d=i-(n-1)/2;return `--r:${(d*Math.min(3,22/Math.max(n,1))).toFixed(1)}deg;--y:${Math.min(12,d*d*0.7).toFixed(1)}px;margin-left:${i?(STEP-CW).toFixed(1):0}px`};
    if(hid)h+=`<div class="hsec">Your hand stays face down until you pick an objective</div><div class="row hand">${h0.hand.map((_,i)=>`<span class="c tb hb" style="${fanS(i)}"></span>`).join('')}</div>`;
-   else h+=`<div class="hsec">${ph=='pick'&&!h0.sel?`Tap ${k} card${k>1?'s':''} to play`:'Your hand'} <button class="b rb" onclick="sortHand()">Sort</button></div><div class="row hand">${handCards().map((c,i)=>cd(c,'hd'+(sel.includes(ck(c))?' sel':''),ph=='pick'&&!h0.sel?`pick(${i})`:'').replace('<span ',`<span style="${fanS(i)}" `)).join('')}</div>`}
+   else h+=`<div class="hsec">${ph=='pick'&&!h0.sel?`Tap ${k} card${k>1?'s':''} to play`:'Your hand'} <button class="b rb" onclick="sortHand()">Sort</button></div><div class="row hand">${handCards().map((c,i)=>cd(c,'hd'+(sel.includes(ck(c))?' sel':'')+tutCls(c),ph=='pick'&&!h0.sel?`pick(${i})`:'').replace('<span ',`<span style="${fanS(i)}" `)).join('')}</div>`}
   h+=obHTML();
   return h}
 
@@ -354,6 +375,76 @@ function dragSetup(){const row=document.querySelector('.hand');if(!row)return;
    const u=ev=>{el.removeEventListener('pointermove',m);el.removeEventListener('pointerup',u);el.removeEventListener('pointercancel',u);
     if(!mv)return;dragAt=Date.now();const cx=ev.clientX;let j=0;[...row.children].forEach((k,n)=>{if(n!=i){const r=k.getBoundingClientRect();if(r.left+r.width/2<cx)j++}});reorder(i,j)};
    el.addEventListener('pointermove',m);el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u)}})}
+
+/* ---------- tutorial: one scripted wave with real choices, played in the browser ---------- */
+let TUT=null;
+const SUI={'♠':0,'♥':1,'♦':2,'♣':3},RKI={J:11,Q:12,K:13,A:14};
+const C=t=>({s:SUI[t.slice(-1)],r:RKI[t.slice(0,-1)]||+t.slice(0,-1)});
+const TUT_ME=['K♥','K♣','6♦','6♣','A♠','A♦','3♦','4♥','7♦','Q♥'],TUT_OPP=['8♦','8♣','J♣','J♥','J♠','5♦','2♦','2♥','9♣','10♣'];
+const TUT_COMM=['Q♦','7♥','2♣','7♣','K♦'],TUT_OPP_PLAYS=[['8♦','8♣'],['J♣','J♥'],['J♠','5♦'],['2♦','2♥'],['9♣']],TUT_TROPHY=[1,3,1,1,1];
+const TUT_INTRO=[
+ {hl:'table',t:'Welcome to the tournament!',x:'You face Sir Roland in five events. In each one you both secretly play cards, and the best poker hand wins that event\'s trophy.'},
+ {hl:'prize',t:'Win trophies',x:'This event\'s trophy is in the middle of the table, with a gold edge. At the end, your best five trophies make a poker hand worth points.'},
+ {hl:'hand',t:'Every card counts',x:'You hold 10 cards and play 9 this wave: 2 in each event, 1 in the last. A card spent now is gone later. The game is deciding when to play your best cards and when to save them.'},
+ {hl:'noble',t:'Nobles reward special plays',x:'The Baron gives a crown worth 4 points to whoever plays the highest Spade at the Joust, the third event. You hold the A♠, the best Spade there is. Tap a noble any time to read it.'}];
+const has=(t)=>TUT.g.P[0].hand.some(c=>HZ.same(c,C(t)));
+const chose=(ev,t)=>TUT.ch[ev]&&TUT.ch[ev].includes(t);
+function tutStep(){if(!TUT)return{};const g=TUT.g,ev=g.ev;
+ if(TUT.stage<TUT_INTRO.length)return Object.assign({a:'next'},TUT_INTRO[TUT.stage]);
+ const won=g.win===0,pick=g.phase=='pick'&&!TUT.done;
+ if(TUT.done){const p=g.P[0],tr=p.tr.map(t=>RK[t.r]+SU[t.s]).join(' '),hn=p.tr.length?HN[HZ.best(p.tr)[0]]:'no hand yet',kept=p.hand.map(c=>RK[c.r]+SU[c.s]).join('');
+  return {a:'end',hl:'',t:'Wave complete!',x:`You won ${p.tr.length} trophies (${tr||'none'})${npts(g,0)?` and ${npts(g,0)} points from the Baron`:''}. Your ${kept} carries into the next wave. A full game is four waves, and your best five trophies score at the end. Remember: win cheaply, throw away junk when you can't win, and save cards for the events and nobles you want most.`}}
+ if(ev==0){if(pick)return{a:'choose',hl:'hand',t:'Event 1: Archery, your choice',x:'Play 2 cards with no community cards: a pair beats no pair. Your Kings will surely win this. Your 6s might not, but saved Kings could make a much bigger hand later, once more cards are on the table.',o:[{l:'Kings: win now',c:['K♥','K♣']},{l:'6s: save the Kings',c:['6♦','6♣']}]};
+  return{a:'cont',hl:'',t:won?'You win the 10♥!':'Sir Roland takes the 10♥',x:won?'Your Kings beat his pair of 8s. A trophy now, but the Kings are spent.':'His 8s beat your 6s. You gave up this trophy on purpose: your Kings are still in your hand.'}}
+ if(ev==1){if(pick)return{a:'choose',hl:'comm',t:'Event 2: Sword Fight, your choice',x:'Three community cards are out, and your 2 cards join them. A♠ with A♦ is a pair of Aces, strong enough to win here. But the A♠ is also the Baron\'s Spade at the Joust (4 points).',o:[{l:'Aces: win now',c:['A♠','A♦']},{l:'3♦ 4♥: save the A♠',c:['3♦','4♥']}]};
+  return{a:'cont',hl:'',t:won?'You win the J♣!':'Sir Roland takes the J♣',x:won?'Your Aces beat his Jacks. But your best Spade is gone, and the Baron\'s crown is still up for grabs.':'His Jacks win. You lost on purpose with your two worst cards and kept the A♠. When you\'re not going for an event, play your junk.'}}
+ if(ev==2){const aS=has('A♠');
+  if(pick)return aS?{a:'play',hl:'noble',t:'Event 3: the Joust',x:'There are two 7s on the table now. Your 7♦ makes three of a kind, and the A♠ is the highest Spade for the Baron. Tap A♠ and 7♦, then Lock in.',c:['A♠','7♦']}
+   :{a:'choose',hl:'comm',t:'Event 3: the Joust, your choice',x:'Two 7s are on the table, so your 7♦ makes three of a kind and wins either way. The last event, Champion, is played with a single card, and your Q♥ pairs the Queen on the table. Spend it for a full house, or save it?',o:[{l:'7♦ Q♥: full house',c:['7♦','Q♥']},{l:'7♦ 3♦: save the Q♥',c:['7♦','3♦']}]};
+  if(chose(1,'3♦'))return{a:'cont',hl:'noble',t:'A trophy and a crown!',x:'Three 7s win the Q♥, and the Baron gives you his crown: 4 points. Saving the A♠ paid off twice.'};
+  return{a:'cont',hl:'noble',t:'You win the Q♥, but…',x:'Sir Roland played the J♠, the highest Spade this time, so he takes the Baron\'s crown (4 points). Your A♠ would have won it.'+(chose(2,'Q♥')?' You also spent your Q♥, so your best single card for Champion is gone.':' Your Q♥ is still saved for Champion.')}}
+ if(ev==3){const kk=has('K♥');
+  if(pick)return kk?{a:'play',hl:'comm',t:'Event 4: Grand Melee',x:'The fifth community card is a King! Your saved Kings now make a full house: three Kings and two 7s. Tap K♥ and K♣, then Lock in.',c:['K♥','K♣']}
+   :{a:'play',hl:'comm',t:'Event 4: Grand Melee',x:'The fifth community card is a King: your Kings would have made a full house here. Your 6s only make two pair, so give them up and keep your best single cards for Champion. Tap 6♦ and 6♣, then Lock in.',c:['6♦','6♣']};
+  return won?{a:'cont',hl:'',t:'You win the K♥!',x:'Kings full beats Sir Roland\'s 2s full. Saving your Kings in Archery paid off.'}
+   :{a:'cont',hl:'',t:'Sir Roland takes the K♥',x:'His full house (three 2s, two 7s) wins. You traded this trophy for Archery: that was your choice.'}}
+ if(ev==4){const left=g.P[0].hand.map(c=>RK[c.r]+SU[c.s]);
+  if(pick)return{a:'choose',hl:'comm',t:'Event 5: Champion, your choice',x:'Play just 1 card with all five community cards. The card you don\'t play stays in your hand for the next wave. Which single card is strongest with this board?',o:left.map(t=>({l:'Play '+t,c:[t]}))};
+  const kept=g.P[0].hand.map(c=>RK[c.r]+SU[c.s]).join('');
+  return won?{a:'cont',hl:'',t:'You win the A♥!',x:`Your card beat his 9♣. You keep the ${kept} for the next wave${/[AKQ]/.test(kept)?', a strong card to start with':''}.`}
+   :{a:'cont',hl:'',t:'Sir Roland takes the A♥',x:'Neither of your last cards could beat his. A strong single card is worth saving for Champion, where you only play one.'}}
+ return{}}
+function tutAllowed(){const st=tutStep();return st.a=='play'?[st.c]:st.a=='choose'?st.o.map(o=>o.c):[]}
+function tutView(){const g=TUT.g;G=HZ.view(g,0);G.P[1].bot=true;S.room.cfg=g.cfg;syncHand()}
+function tutOppReady(){const g=TUT.g,p=g.P[1];p.sel=TUT_OPP_PLAYS[g.ev].map(C).map(w=>p.hand.find(c=>HZ.same(c,w)))}
+function startTut(){const nm=myName()||'You';
+  const g=HZ.newGame([{name:nm},{name:'Sir Roland'}],{nn:1,od:0,rfl:0});
+  g.P[0].hand=TUT_ME.map(C).sort(HZ.srt);g.P[1].hand=TUT_OPP.map(C).sort(HZ.srt);
+  g.deck=TUT_COMM.map(C).reverse();g.comm=[];
+  g.nobles=[{n:HZ.NOB.find(n=>n.id=='b-jo'),sp:[null,null]}];
+  for(let i=0;i<5;i++){const s=TUT_TROPHY[i];g.trs[i]={s,r:HZ.TR[i],h:[s,...[0,1,2,3].filter(x=>x!=s)]}}
+  TUT={g,stage:0,ch:{},done:false};S={room:{code:'TUTORIAL',you:0,host:0,size:2,cfg:g.cfg,seats:[{name:nm,online:true},{name:'Sir Roland',bot:true,online:true}]}};
+  order=[];sel=[];tutOppReady();tutView();render();scrollTo(0,0)}
+function exitTut(){TUT=null;S=null;G=null;order=[];sel=[];render()}
+function tutNext(){const st=tutStep();if(st.a=='next'){TUT.stage++;render()}else if(st.a=='cont')send({t:'cont'})}
+function tutChoose(i){const o=tutStep().o[i];sel=o.c.map(C).map(ck);render()}
+function tutMayTap(k){const al=tutAllowed();if(!al.length){toast('Read the herald first, then tap Next.');return false}
+  if(!al.some(cs=>cs.map(C).some(c=>ck(c)==k))){toast('For this lesson, tap one of the glowing cards.');return false}return true}
+function tutCls(c){if(!TUT)return'';const al=tutAllowed();if(!al.length)return' tdim';return al.some(cs=>cs.map(C).some(x=>HZ.same(x,c)))?' tglow':' tdim'}
+function tutSend(m){const g=TUT.g,st=tutStep();
+  if(m.t=='play'&&(st.a=='play'||st.a=='choose')){const opts=tutAllowed(),hit=opts.find(cs=>cs.length==m.cards.length&&cs.map(C).every(w=>m.cards.some(c=>HZ.same(c,w))));
+    if(!hit){toast(st.a=='choose'?'Pick one of the choices in the herald\'s box.':'Play the glowing cards for this lesson.');return}
+    TUT.ch[g.ev]=hit.slice();HZ.play(g,0,m.cards);HZ.reveal(g);sel=[];tutView();render()}
+  else if(m.t=='unplay'){HZ.unplay(g,0);tutView();render()}
+  else if(m.t=='cont'&&st.a=='cont'){if(g.ev==4){TUT.done=true;tutView();render();return}HZ.nxt(g);tutOppReady();tutView();render()}
+  else if(m.t=='leave')exitTut()}
+function coachHTML(){const st=tutStep();let btn='';
+  if(st.a=='next')btn='<button class="b" onclick="tutNext()">Next</button>';
+  else if(st.a=='cont')btn='<button class="b" onclick="tutNext()">Continue</button>';
+  else if(st.a=='end')btn='<button class="b" onclick="exitTut();solo()">Play a practice game</button><button class="b ghost" onclick="exitTut()">Back to home</button>';
+  const opts=st.a=='choose'?`<div class="copts">${st.o.map((o,i)=>{const on=o.c.length==sel.length&&o.c.map(C).every(c=>sel.includes(ck(c)));return `<button class="b cop ${on?'on':''}" onclick="tutChoose(${i})">${o.l}</button>`}).join('')}</div>`:'';
+  return `<div class="coach"><div class="ch"><span class="cht">${st.t}</span></div><p>${st.x}</p>${opts}${btn?`<div class="cb">${btn}</div>`:''}</div>`}
+function tutAfterRender(){}
 addEventListener('resize',()=>{if(G)render()});
 try{document.documentElement.style.setProperty('--back',`url("${BACK}")`)}catch(_){}
 render();connect();
