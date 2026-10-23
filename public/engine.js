@@ -35,7 +35,10 @@ function eN(c){const n=c.length,r=c.map(x=>x.r).sort((a,b)=>b-a),fl=n==5&&c.ever
 const best=c=>c.length<=5?eN(c):combos(c,5).map(eN).sort((a,b)=>cmp(b,a))[0];
 const bestCards=c=>c.length<=5?c:combos(c,5).sort((a,b)=>cmp(eN(b),eN(a)))[0];
 const tie=(c,h)=>c.slice().sort((a,b)=>b.r-a.r||h.indexOf(a.s)-h.indexOf(b.s)).map(x=>h.length-h.indexOf(x.s));
-const key=(pl,cm,h)=>best(pl.concat(cm)).concat(tie(pl,h));
+/* Champion: only matches with your own card count (a pair already on the board doesn't help anyone) */
+const champ=(c,cm)=>{const n=cm.filter(x=>x.r==c.r).length;return [[0,1,3,7][Math.min(n,3)],c.r]};
+const handKey=(pl,cm,ev)=>ev==4&&pl.length==1?champ(pl[0],cm):best(pl.concat(cm));
+const key=(pl,cm,h,ev)=>handKey(pl,cm,ev).concat(tie(pl,h));
 const hname=(k,ev)=>ev==0?['High card','Pair'][k[0]]:HN[k[0]];
 const tk=tie;
 function nq(nb,pk,cm){const a=pk[0],b=pk[1],two=pk.length==2;
@@ -79,7 +82,7 @@ function newGame(players,cfg){const n=players.length;cfg=Object.assign(defaultCf
  for(let i=0;i<cfg.nn;i++)g.nobles.push({n:drawNoble(g,g.nobles.map(z=>z.n)),sp:[null,null]});
  deal(g);return g}
 function botPick(g,p){const k=EV[g.ev][1],w=[25,22,15,8,0][g.ev],lv=g.nobles.filter(z=>z.n.ev==g.ev);let bs=-1e9,bc;
- for(const c of combos(p.hand,k)){const e=best(c.concat(g.comm));let s=e[0]*1000+(e[1]||0)*12+(e[2]||0)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*150;
+ for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev);let s=e[0]*1000+(e[1]||0)*12+(e[2]||0)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*150;
   lv.forEach(z=>{if(nq(z.n,c,g.comm))s+=250+30*NV(g)[z.sp.indexOf(null)]});
   if(s>bs){bs=s;bc=c}}return bc}
 /* player i picks objective k from their dealt options; can switch until the first reveal, and picks once after a refill */
@@ -102,7 +105,7 @@ function unplay(g,i){const p=g.P[i];if(!p||g.phase!='pick')return false;p.sel=nu
 const allIn=g=>g.phase=='pick'&&g.P.every(p=>p.bot||p.sel);
 function reveal(g){const T=TRO(g);
  g.P.forEach(p=>{const c=p.bot?botPick(g,p):p.sel;p.pl=c;p.hand=p.hand.filter(x=>!c.includes(x));p.sel=null});
- g.ks=g.P.map(p=>key(p.pl,g.comm,T.h));let w=0;g.ks.forEach((x,i)=>{if(cmp(x,g.ks[w])>0)w=i});
+ g.ks=g.P.map(p=>key(p.pl,g.comm,T.h,g.ev));let w=0;g.ks.forEach((x,i)=>{if(cmp(x,g.ks[w])>0)w=i});
  g.nlog=[];const ex=[];
  g.nobles.forEach((z,ni)=>{if(z.n.ev!=g.ev)return;let bi=-1,bk=null;
   g.P.forEach((p,i)=>{const r=nq(z.n,p.pl,g.comm);if(!r)return;const kk=nkey(z.n,r);if(!bk||cmp(kk,bk)>0){bk=kk;bi=i}});
@@ -122,7 +125,7 @@ function view(g,me){const open=g.phase=='end';
    if(i==me){o.hand=p.hand;o.oc=p.oc;o.sel=p.sel}
    return o})}}
 
-const API={SU,COL,RK,EV,TR,HN,HP0,NOB,OBJ,defaultCfg,srt,same,shuf,cmp,combos,eN,best,bestCards,tie,key,hname,nq,nkey,NV,TRO,npts,hpts,ach,obv,obp,needOb,ranking,
+const API={SU,COL,RK,EV,TR,HN,HP0,NOB,OBJ,defaultCfg,srt,same,shuf,cmp,combos,eN,best,bestCards,tie,key,handKey,champ,hname,nq,nkey,NV,TRO,npts,hpts,ach,obv,obp,needOb,ranking,
  newGame,deal,botPick,pickObj,stillPossible,refillObjectives,play,unplay,allIn,reveal,nxt,view};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.HZ=API;
 })(this);
