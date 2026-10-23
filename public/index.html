@@ -415,7 +415,7 @@ const TUT_COMM=['7♥','2♣','9♦','7♣','K♦'],TUT_OPP_PLAYS=[['8♦','8♣
 const TUT_INTRO=[
  {hl:'table',t:'Welcome to the tournament!',x:'You face Sir Roland in five events. In each one you both secretly play cards from your hand, and the best poker hand wins that event\'s trophy. First, the cards are dealt.'},
  {hl:'hand',t:'The deal',x:'The dealer deals you and Sir Roland 10 cards each. Watch them land in your hand at the bottom of the screen: these are your cards for the whole wave, and only you can see them.',deal:true},
- {hl:'prize',t:'Win trophies',x:'This event\'s trophy is in the middle of the table, with a gold edge. At the end, your best five trophies make a poker hand worth points.'},
+ {hl:'prize',t:'Win trophies',x:'This event\'s trophy sits on the gold stand in the middle of the table. At the end, your best five trophies make a poker hand worth points. The trophy also breaks ties: if two hands are equal, cards in the trophy\'s own suit win, and the small suit symbols at the bottom of the trophy show the order for the other suits.'},
  {hl:'hand',t:'Every card counts',x:'You hold 10 cards and play 9 this wave: 2 in each event, 1 in the last. A card spent now is gone later. The game is deciding when to play your best cards and when to save them.'}];
 const has=(t)=>TUT.g.P[0].hand.some(c=>HZ.same(c,C(t)));
 const chose=(ev,t)=>TUT.ch[ev]&&TUT.ch[ev].includes(t);
