@@ -6,7 +6,7 @@
 :root{--bg:#2f7d58;--bg2:#3f9970;--fg:#f6f0dc;--box:rgba(0,0,0,.26);--bd:rgba(255,255,255,.2);--ac:#f2c14e;--card:#fffdf7;--cw:52px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d3626;--bg2:#175038}}
 :root[data-theme="dark"]{--bg:#0d3626;--bg2:#175038}
-html,body{margin:0;min-height:100%;background:var(--bg) radial-gradient(ellipse at 50% 40%,var(--bg2),var(--bg) 75%) fixed;color:var(--fg);font:15px/1.35 system-ui,-apple-system,sans-serif}
+html,body{overflow-x:hidden;margin:0;min-height:100%;background:var(--bg) radial-gradient(ellipse at 50% 40%,var(--bg2),var(--bg) 75%) fixed;color:var(--fg);font:15px/1.35 system-ui,-apple-system,sans-serif}
 #app{max-width:680px;margin:0 auto;padding:8px 8px 30px}
 h1{font-size:18px;margin:2px 0;letter-spacing:4px;text-align:center}
 #st{background:var(--box);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin:6px 0;font-weight:600;text-align:center}
@@ -156,8 +156,8 @@ button.b.sm{font-size:12px;padding:5px 9px;margin:0}
 .ctr .lrow{gap:5px}.ctr .tro1 small{color:#3a2810}.ctr .c.ph{background:rgba(90,60,25,.16);border:1px dashed rgba(60,40,15,.55);box-shadow:none}
 .ctr .c{box-shadow:0 3px 5px rgba(60,35,10,.45)}
 .hsec{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;margin:4px 0 0;opacity:.95}.hsec .rb{margin:0;padding:3px 9px}
-.hand{padding:24px 0 8px;overflow:visible}
-.hand .c{transform:translateY(var(--y,0px)) rotate(var(--r,0deg));transform-origin:50% 130%;transition:transform .15s ease}
+.hand{padding:24px 0 8px;overflow:visible;gap:0}
+.hand .c{transform:translateY(var(--y,0px)) rotate(var(--r,0deg));transform-origin:50% 100%;transition:transform .15s ease}
 .hand .c.sel{transform:translateY(calc(var(--y,0px) - 20px)) rotate(var(--r,0deg))}
 .hand .c.hb{--cw:58px;margin-left:-30px;flex:none}.hand .c.hb:first-child{margin-left:0}
 @media (prefers-reduced-motion:reduce){.hand .c{transition:none}}
@@ -224,6 +224,7 @@ function leave(){if(G&&G.phase!='end'&&!confirm('Leave this game? A bot will tak
 function pick(i){if(Date.now()-dragAt<400||!G||G.phase!='pick')return;const p=myP();if(p.sel||needOb(G,p))return;const k=order[i],j=sel.indexOf(k);if(j>=0)sel.splice(j,1);else if(sel.length<EV[G.ev][1])sel.push(k);render()}
 function lockIn(){if(sel.length!=EV[G.ev][1])return;send({t:'play',cards:selCards().map(c=>({s:c.s,r:c.r}))})}
 function unlock(){send({t:'unplay'})}
+const vw=()=>Math.min(document.documentElement.clientWidth||innerWidth,screen&&screen.width?screen.width:9999,innerWidth);
 let obOpen=false;
 function pickObj(k){obOpen=false;send({t:'obj',k});render()}
 function canSwitchOb(){const h0=myP();return G&&G.phase=='pick'&&!G.hist.length&&!h0.rf&&h0.ob!=null&&h0.oc&&h0.oc.length>1}
@@ -290,7 +291,7 @@ function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[
 function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost();
   const sch=`<div class="sch2"><div></div>${EV.map((x,i)=>`<div class="sce ${i==g.ev?'on':''}">${STI[i]}<small>${x[0]}</small></div>`).join('')}${[0,1,2,3].map(w=>`<div class="scd ${w==g.wave?'on':w<g.wave?'done':''}">D${w+1}</div>${EV.map((x,i)=>{const tr=g.trs[w*5+i],hw=g.hist.find(z=>z.w==w&&z.e==i);if(w>g.wave)return `<div class="sct hid">?</div>`;return `<div class="sct ${w==g.wave&&i==g.ev?'cur':''} ${hw?'won':''}" style="background:${COL[tr.s]}">${RK[tr.r]}${SU[tr.s]}${hw?`<i style="background:${PC[hw.win]}"></i>`:''}</div>`}).join('')}`).join('')}</div>`;
   const others=g.P.map((_,i)=>(me+1+i)%g.n).slice(0,g.n-1),K=others.length;
-  const H=K>=4?356:336,cy=Math.round(H/2+4),ry=Math.round(H/2-44),rowTop=cy+2,W=Math.min(innerWidth,680)-12,cx=W/2,rx=W/2-(K>=4?36:42),D=K>=4?64:78;
+  const H=K>=4?356:336,cy=Math.round(H/2+4),ry=Math.round(H/2-44),rowTop=cy+2,W=Math.min(vw(),680)-12,cx=W/2,rx=W/2-(K>=4?36:42),D=K>=4?64:78;
   const backs=(n,cls='')=>Array(n).fill(`<span class="c tb ${cls}"></span>`).join('');
   const fan=n=>{const m=Math.min(n,6);return `<div class="fan">${Array.from({length:m},(_,q)=>`<i style="--r:${((q-(m-1)/2)*13).toFixed(0)}deg"></i>`).join('')}<b>${n}</b></div>`};
   let seats='',spots='';
@@ -330,7 +331,7 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   const win=ph=='show'&&g.win==me;
   h+=`<div class="you ${win?'win':''}" style="--pc:${PC[me]}"><div class="yl"><div class="ln">${chip(me)}<b>You</b>${win?'🏆':''}<span class="lst">${h0.tr.length}🏆${g.cfg.nn?' '+npts(g,me)+'★':''}</span></div><div id="st">${st}${wait?`<div class="wait">${wait}</div>`:''}${ph=='end'&&!host?'<div class="wait">The host can start a rematch.</div>':''}</div><div class="row trow">${hpill()}${tro(h0).map(tcd).join('')}</div></div><div class="yb">${obChip()}${btn}</div></div>`;
   if(ph!='end'){const hid=nob&&!g.hist.length;
-   const n=h0.hand.length,fanS=i=>{const d=i-(n-1)/2;return `--r:${(d*Math.min(5,44/Math.max(n,1))).toFixed(1)}deg;--y:${Math.min(18,d*d*1.1).toFixed(1)}px`};
+   const n=h0.hand.length,HW=Math.min(vw(),680)-16,CW=58,EDGE=20,STEP=n>1?Math.max(20,Math.min(CW-6,(HW-CW-2*EDGE)/(n-1))):0,fanS=i=>{const d=i-(n-1)/2;return `--r:${(d*Math.min(3,22/Math.max(n,1))).toFixed(1)}deg;--y:${Math.min(12,d*d*0.7).toFixed(1)}px;margin-left:${i?(STEP-CW).toFixed(1):0}px`};
    if(hid)h+=`<div class="hsec">Your hand stays face down until you pick an objective</div><div class="row hand">${h0.hand.map((_,i)=>`<span class="c tb hb" style="${fanS(i)}"></span>`).join('')}</div>`;
    else h+=`<div class="hsec">${ph=='pick'&&!h0.sel?`Tap ${k} card${k>1?'s':''} to play`:'Your hand'} <button class="b rb" onclick="sortHand()">Sort</button></div><div class="row hand">${handCards().map((c,i)=>cd(c,'hd'+(sel.includes(ck(c))?' sel':''),ph=='pick'&&!h0.sel?`pick(${i})`:'').replace('<span ',`<span style="${fanS(i)}" `)).join('')}</div>`}
   h+=obHTML();
