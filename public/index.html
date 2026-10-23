@@ -6,7 +6,7 @@
 :root{--bg:#2f7d58;--bg2:#3f9970;--fg:#f6f0dc;--box:rgba(0,0,0,.26);--bd:rgba(255,255,255,.2);--ac:#f2c14e;--card:#fffdf7;--cw:52px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d3626;--bg2:#175038}}
 :root[data-theme="dark"]{--bg:#0d3626;--bg2:#175038}
-html,body{overflow-x:hidden;margin:0;min-height:100%;background:var(--bg) radial-gradient(ellipse at 50% 40%,var(--bg2),var(--bg) 75%) fixed;color:var(--fg);font:15px/1.35 system-ui,-apple-system,sans-serif}
+html,body{overflow-x:hidden;overscroll-behavior:none;margin:0;min-height:100%;background:var(--bg) radial-gradient(ellipse at 50% 40%,var(--bg2),var(--bg) 75%) fixed;color:var(--fg);font:15px/1.35 system-ui,-apple-system,sans-serif}
 #app{max-width:680px;margin:0 auto;padding:8px 8px 30px}
 h1{font-size:18px;margin:2px 0;letter-spacing:4px;text-align:center}
 #st{background:var(--box);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin:6px 0;font-weight:600;text-align:center}
@@ -177,6 +177,10 @@ button.b.sm{font-size:12px;padding:5px 9px;margin:0}
 .tbl.k1 .pseat{width:132px}
 .tut .canopy{display:none}.tut .stands{border-radius:10px}.tut .stands .rbox{padding-top:6px}.tut .ctr .evn{display:none}
 .tut .coach p{margin-top:2px;font-size:13px;line-height:1.33}.tut .coach .cht{font-size:17px}.tut .coach{padding:7px 10px 8px}.tut .copts .cop{padding:7px 6px}.tut .hsec{margin-top:0}.tut .hand{padding-top:20px}
+.tut .hand .c.undealt{visibility:hidden}
+.deckpile{position:absolute;z-index:4;width:38px;height:53px;transform:translate(-50%,-50%);border-radius:4px;background:var(--back) center/cover;box-shadow:2px 2px 0 #1b2240,4px 4px 0 #2a3260,6px 6px 0 #1b2240,7px 8px 10px rgba(0,0,0,.5)}
+.deckpile span{position:absolute;left:50%;top:100%;transform:translate(-50%,8px);font-size:10px;font-weight:700;color:#3a2810;background:rgba(239,226,192,.92);border-radius:6px;padding:0 5px}
+.flyc{position:fixed;z-index:30;width:36px;height:50px;border-radius:4px;background:var(--back) center/cover;box-shadow:0 4px 8px rgba(0,0,0,.45);pointer-events:none}
 /* tutorial */
 .tutb{display:block;width:100%;margin:10px 0 2px;padding:11px 14px;font-size:16px;background:#efe2c0;color:#3a2810;border:2px solid #e3b43f}
 .coach{position:relative;z-index:6;background:#efe2c0;color:#2b1d0d;border:2px solid #e3b43f;border-radius:10px;padding:8px 11px 9px;margin:6px 0 4px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
@@ -266,10 +270,18 @@ const online=i=>S.room.seats[i]&&S.room.seats[i].online;
 const isHost=()=>S&&S.room.you==S.room.host;
 
 /* ---------- screens ---------- */
-function render(){const app=document.getElementById('app');let h='';
+/* fit the game screen to the visible screen: shrink the table first, then scale everything if needed */
+let FIT_SHRINK=0;
+const viewH=()=>Math.min(innerHeight,window.visualViewport?visualViewport.height:innerHeight);
+function buildHTML(){let h='';
   if(!connected&&!TUT)h+=`<div class="conn">${S?'Connection lost. Reconnecting…':'Connecting to the HUZZAH! server…'}</div>`;
-  if(!S)h+=homeHTML();else if(!G)h+=lobbyHTML();else h+=gameHTML();
-  app.className=TUT?'tut hl-'+(tutStep().hl||''):'';app.innerHTML=h;if(G)dragSetup();if(TUT)tutAfterRender()}
+  if(!S)h+=homeHTML();else if(!G)h+=lobbyHTML();else h+=gameHTML();return h}
+function render(){const app=document.getElementById('app');
+  app.className=TUT?'tut hl-'+(tutStep().hl||''):'';app.style.zoom='';FIT_SHRINK=0;app.innerHTML=buildHTML();
+  if(G&&G.phase!='end'){const de=document.documentElement,avail=viewH();let over=de.scrollHeight-avail;
+    if(over>0){FIT_SHRINK=over;app.innerHTML=buildHTML();over=de.scrollHeight-avail}
+    if(over>0)app.style.zoom=Math.max(0.6,avail/de.scrollHeight).toFixed(3)}
+  if(G)dragSetup();if(TUT)tutAfterRender()}
 
 function homeHTML(){const nm=esc(LS.get().name||'');
   return `<div class="home"><h1>HUZZAH!</h1><div style="font-size:13px;opacity:.85">The Tournament of Champions · 2 to 6 players</div><button class="b tutb" onclick="startTut()">New to HUZZAH? Play the 2-minute tutorial</button>
@@ -310,22 +322,22 @@ function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[
 function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost();
   const sch=`<div class="sch2"><div></div>${EV.map((x,i)=>`<div class="sce ${i==g.ev?'on':''}">${STI[i]}<small>${x[0]}</small></div>`).join('')}${[0,1,2,3].map(w=>`<div class="scd ${w==g.wave?'on':w<g.wave?'done':''}">D${w+1}</div>${EV.map((x,i)=>{const tr=g.trs[w*5+i],hw=g.hist.find(z=>z.w==w&&z.e==i);if(w>g.wave)return `<div class="sct hid">?</div>`;return `<div class="sct ${w==g.wave&&i==g.ev?'cur':''} ${hw?'won':''}" style="background:${COL[tr.s]}">${RK[tr.r]}${SU[tr.s]}${hw?`<i style="background:${PC[hw.win]}"></i>`:''}</div>`}).join('')}`).join('')}</div>`;
   const others=g.P.map((_,i)=>(me+1+i)%g.n).slice(0,g.n-1),K=others.length;
-  const H=K>=4?356:K==1&&TUT?282:336,cy=Math.round(H/2+4),ry=Math.round(H/2-44),rowTop=cy+2,W=Math.min(vw(),680)-12,cx=W/2,rx=W/2-(K>=4?36:42),D=K>=4?64:78;
+  const H0=K>=4?356:K==1&&TUT?282:336,H=Math.max(K>=4?300:K==1?236:262,H0-FIT_SHRINK),cy=Math.round(H/2+4),ry=Math.round(H/2-44),rowTop=cy+2,W=Math.min(vw(),680)-12,cx=W/2,rx=W/2-(K>=4?36:42),D=K>=4?64:78;
   const backs=(n,cls='')=>Array(n).fill(`<span class="c tb ${cls}"></span>`).join('');
   const fan=n=>{const m=Math.min(n,6);return `<div class="fan">${Array.from({length:m},(_,q)=>`<i style="--r:${((q-(m-1)/2)*13).toFixed(0)}deg"></i>`).join('')}<b>${n}</b></div>`};
   let seats='',spots='';
   others.forEach((i,j)=>{const p=g.P[i],off=!p.bot&&!online(i),win=ph=='show'&&i==g.win,a=Math.PI*(1-(j+0.5)/K),c=Math.cos(a),sn=Math.sin(a);
    const x=cx+rx*c,y=cy-ry*sn,dx=cx-x,dy=cy-y,dl=Math.hypot(dx,dy)||1,sx=Math.round(x+dx/dl*D),sy=Math.min(Math.round(y+dy/dl*D),rowTop-30);
    const stat=ph!='pick'||p.bot?'':p.locked?' · ready':off?' · offline':' · choosing';
-   seats+=`<div class="pseat ${win?'win':''} ${off?'off':''}" style="left:${Math.round(x)}px;top:${Math.round(y)}px;--pc:${PC[i]}">${fan(p.hc)}<div class="plate">${K>=4?'':chip(i)}<b>${esc(p.n)}</b>${p.bot&&K<4?'🤖':''}</div><div class="pm">${p.tr.length}🏆${g.cfg.nn?' '+npts(g,i)+'★':''}${stat}</div>${ph=='show'?`<div class="hn2">${hname(g.ks[i],g.ev)}${win?' 🏆':''}</div>`:''}${host&&off&&ph!='end'?`<button class="b sm" onclick="send({t:'botify',seat:${i}})">Bot plays</button>`:''}</div>`;
-   const cs=ph=='show'?p.pl.map(c=>cd(c,'flip')).join(''):(p.locked||p.bot)&&ph=='pick'?backs(k):'';
+   seats+=`<div class="pseat ${win?'win':''} ${off?'off':''}" style="left:${Math.round(x)}px;top:${Math.round(y)}px;--pc:${PC[i]}">${fan(TUT?Math.min(p.hc,TUT.oppDealt):p.hc)}<div class="plate">${K>=4?'':chip(i)}<b>${esc(p.n)}</b>${p.bot&&K<4?'🤖':''}</div><div class="pm">${p.tr.length}🏆${g.cfg.nn?' '+npts(g,i)+'★':''}${stat}</div>${ph=='show'?`<div class="hn2">${hname(g.ks[i],g.ev)}${win?' 🏆':''}</div>`:''}${host&&off&&ph!='end'?`<button class="b sm" onclick="send({t:'botify',seat:${i}})">Bot plays</button>`:''}</div>`;
+   const cs=ph=='show'?p.pl.map(c=>cd(c,'flip')).join(''):(p.locked||p.bot)&&ph=='pick'&&!(TUT&&!TUT.dealDone)?backs(k):'';
    if(cs)spots+=`<div class="spot ${win?'win':''}" style="left:${sx}px;top:${sy}px;--pc:${PC[i]}"><div class="cs">${cs}</div></div>`});
   const h0=g.P[me];let mine='',ml='';
   if(ph=='show'){mine=h0.pl.map(c=>cd(c,'flip')).join('');ml=hname(g.ks[me],g.ev)+(g.win==me?' 🏆':'')}
   else{const sc=selCards();mine=sc.map(c=>cd(c,'land',h0.sel?'':`pick(${order.indexOf(ck(c))})`)).join('')+Array(k-sc.length).fill('<span class="c ph"></span>').join('')}
   const myspot=`<div class="spot me ${ph=='show'&&g.win==me?'win':''}" style="left:50%;top:${H-40}px;--pc:${PC[me]}"><div class="cs">${mine}</div>${ml?`<small>${ml}</small>`:h0.sel?'<small>Locked in</small>':''}</div>`;
-  const ctr=`<div class="ctr" style="top:${rowTop}px"><div class="lrow"><div class="tro1 prize" title="Trophy for this event">${tcd(T)}</div><div class="cm"><div class="row">${[0,1,2,3,4].map(i=>g.comm[i]?cd(g.comm[i]):'<span class="c ph"></span>').join('')}</div></div></div><div class="evn">${STI[g.ev]} ${e[0]}, day ${g.wave+1}</div></div>`;
-  return `${TUT?'':`<div class="herald">${sch}</div>`}<div class="tbl ${K>=4?'k4':''} ${K==1?'k1':''}" style="height:${H}px"><div class="top"></div><div class="tilt" style="top:${rowTop+30}px"></div>${seats}${spots}${ctr}${myspot}</div>
+  const ctr=`<div class="ctr" style="top:${rowTop}px"><div class="lrow"><div class="tro1 prize" title="Trophy for this event">${tcd(T)}</div><div class="cm"><div class="row">${[0,1,2,3,4].map(i=>g.comm[i]?cd(g.comm[i]):'<span class="c ph"></span>').join('')}</div></div></div>${H>=H0?`<div class="evn">${STI[g.ev]} ${e[0]}, day ${g.wave+1}</div>`:''}</div>`;
+  return `${TUT?'':`<div class="herald">${sch}</div>`}<div class="tbl ${K>=4?'k4':''} ${K==1?'k1':''}" style="height:${H}px"><div class="top"></div>${TUT&&TUT.deckVis?`<div class="deckpile" style="left:${Math.round(W*0.8)}px;top:${Math.round(H*0.27)}px" title="The dealer's deck"><span>Deck</span></div>`:''}<div class="tilt" style="top:${rowTop+30}px"></div>${seats}${spots}${ctr}${myspot}</div>
   ${ph=='show'?g.nlog.map(t=>`<div class="nl">👑 ${esc(t)}</div>`).join('')+(g.olog||[]).map(t=>`<div class="nl">🎯 ${esc(t)}</div>`).join(''):''}`}
 
 function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),host=isHost(),k=e[1],nob=needOb(g,h0);let st='',wait='';
@@ -354,7 +366,7 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   if(ph!='end'){const hid=nob&&!g.hist.length;
    const n=h0.hand.length,HW=Math.min(vw(),680)-16,CW=58,EDGE=20,STEP=n>1?Math.max(20,Math.min(CW-6,(HW-CW-2*EDGE)/(n-1))):0,fanS=i=>{const d=i-(n-1)/2;return `--r:${(d*Math.min(3,22/Math.max(n,1))).toFixed(1)}deg;--y:${Math.min(12,d*d*0.7).toFixed(1)}px;margin-left:${i?(STEP-CW).toFixed(1):0}px`};
    if(hid)h+=`<div class="hsec">Your hand stays face down until you pick an objective</div><div class="row hand">${h0.hand.map((_,i)=>`<span class="c tb hb" style="${fanS(i)}"></span>`).join('')}</div>`;
-   else h+=`<div class="hsec">${ph=='pick'&&!h0.sel?`Tap ${k} card${k>1?'s':''} to play`:'Your hand'} <button class="b rb" onclick="sortHand()">Sort</button></div><div class="row hand">${handCards().map((c,i)=>cd(c,'hd'+(sel.includes(ck(c))?' sel':'')+tutCls(c),ph=='pick'&&!h0.sel?`pick(${i})`:'').replace('<span ',`<span style="${fanS(i)}" `)).join('')}</div>`}
+   else h+=`<div class="hsec">${ph=='pick'&&!h0.sel?`Tap ${k} card${k>1?'s':''} to play`:'Your hand'} <button class="b rb" onclick="sortHand()">Sort</button></div><div class="row hand">${handCards().map((c,i)=>cd(c,'hd'+(sel.includes(ck(c))?' sel':'')+tutCls(c)+(TUT&&i>=TUT.dealt?' undealt':''),ph=='pick'&&!h0.sel?`pick(${i})`:'').replace('<span ',`<span style="${fanS(i)}" `)).join('')}</div>`}
   h+=obHTML();
   return h}
 
@@ -383,7 +395,8 @@ const C=t=>({s:SUI[t.slice(-1)],r:RKI[t.slice(0,-1)]||+t.slice(0,-1)});
 const TUT_ME=['K♥','K♣','6♦','6♣','A♠','A♦','3♦','4♥','7♦','Q♥'],TUT_OPP=['8♦','8♣','J♣','J♥','J♠','5♦','2♦','2♥','9♣','10♣'];
 const TUT_COMM=['Q♦','7♥','2♣','7♣','K♦'],TUT_OPP_PLAYS=[['8♦','8♣'],['J♣','J♥'],['J♠','5♦'],['2♦','2♥'],['9♣']],TUT_TROPHY=[1,3,1,1,1];
 const TUT_INTRO=[
- {hl:'table',t:'Welcome to the tournament!',x:'You face Sir Roland in five events. In each one you both secretly play cards, and the best poker hand wins that event\'s trophy.'},
+ {hl:'table',t:'Welcome to the tournament!',x:'You face Sir Roland in five events. In each one you both secretly play cards from your hand, and the best poker hand wins that event\'s trophy. First, the cards are dealt.'},
+ {hl:'hand',t:'The deal',x:'The dealer deals you and Sir Roland 10 cards each. Watch them land in your hand at the bottom of the screen: these are your cards for the whole wave, and only you can see them.',deal:true},
  {hl:'prize',t:'Win trophies',x:'This event\'s trophy is in the middle of the table, with a gold edge. At the end, your best five trophies make a poker hand worth points.'},
  {hl:'hand',t:'Every card counts',x:'You hold 10 cards and play 9 this wave: 2 in each event, 1 in the last. A card spent now is gone later. The game is deciding when to play your best cards and when to save them.'},
  {hl:'noble',t:'Nobles reward special plays',x:'The Baron gives a crown worth 4 points to whoever plays the highest Spade at the Joust, the third event. You hold the A♠, the best Spade there is. Tap a noble any time to read it.'}];
@@ -393,19 +406,19 @@ function tutStep(){if(!TUT)return{};const g=TUT.g,ev=g.ev;
  if(TUT.stage<TUT_INTRO.length)return Object.assign({a:'next'},TUT_INTRO[TUT.stage]);
  const won=g.win===0,pick=g.phase=='pick'&&!TUT.done;
  if(TUT.done){const p=g.P[0],tr=p.tr.map(t=>RK[t.r]+SU[t.s]).join(' '),hn=p.tr.length?HN[HZ.best(p.tr)[0]]:'no hand yet',kept=p.hand.map(c=>RK[c.r]+SU[c.s]).join('');
-  return {a:'end',hl:'',t:'Wave complete!',x:`You won ${p.tr.length} trophies (${tr||'none'})${npts(g,0)?` and ${npts(g,0)} points from the Baron`:''}. Your ${kept} carries into the next wave. A full game is four waves, and your best five trophies score at the end. Remember: win cheaply, throw away junk when you can't win, and save cards for the events and nobles you want most.`}}
+  return {a:'end',hl:'',t:'Wave complete!',x:`You won ${p.tr.length} trophies (${tr||'none'})${npts(g,0)?` and ${npts(g,0)} points from the Baron`:''}. Your ${kept} carries into the next wave, where you\'re dealt 9 fresh cards to join it. A full game is four waves, and your best five trophies score at the end. Remember: win cheaply, throw away junk when you can't win, and save cards for the events and nobles you want most.`}}
  if(ev==0){if(pick)return{a:'choose',hl:'hand',t:'Event 1: Archery, your choice',x:'Play 2 cards with no community cards: a pair beats no pair. Your Kings will surely win this. Your 6s might not, but saved Kings could make a much bigger hand later. Or play your two worst cards: you lose this one, but keep both pairs.',o:[{l:'Kings: win now',c:['K♥','K♣']},{l:'6s: save the Kings',c:['6♦','6♣']},{l:'3♦ 4♥: throw away',c:['3♦','4♥']}]};
   return{a:'cont',hl:'',t:won?'You win the 10♥!':'Sir Roland takes the 10♥',x:won?'Your Kings beat his pair of 8s. A trophy now, but the Kings are spent.':chose(0,'3♦')?'His 8s win. You lost on purpose with your two worst cards, and kept both your Kings and your 6s for later. Playing a bad hand is a real choice.':'His 8s beat your 6s. You gave up this trophy on purpose: your Kings are still in your hand.'}}
- if(ev==1){const jp=has('3♦')?['3♦','4♥']:['6♦','6♣'];if(pick)return{a:'choose',hl:'comm',t:'Event 2: Sword Fight, your choice',x:'Three community cards are out, and your 2 cards join them. A♠ with A♦ is a pair of Aces, strong enough to win here. But the A♠ is also the Baron\'s Spade at the Joust (4 points).',o:[{l:'Aces: win now',c:['A♠','A♦']},{l:jp.join(' ')+': save the A♠',c:jp}]};
+ if(ev==1){const jp=has('3♦')?['3♦','4♥']:['6♦','6♣'];if(pick)return{a:'choose',hl:'comm',t:'Event 2: Sword Fight, your choice',x:'The dealer lays three community cards in the middle. Everyone shares them, and your 2 cards join them. A♠ with A♦ is a pair of Aces, strong enough to win here. But the A♠ is also the Baron\'s Spade at the Joust (4 points).',o:[{l:'Aces: win now',c:['A♠','A♦']},{l:jp.join(' ')+': save the A♠',c:jp}]};
   return{a:'cont',hl:'',t:won?'You win the J♣!':'Sir Roland takes the J♣',x:won?'Your Aces beat his Jacks. But your best Spade is gone, and the Baron\'s crown is still up for grabs.':(chose(1,'3♦')?'His Jacks win. You lost on purpose with your two worst cards and kept the A♠. When you\'re not going for an event, play your junk.':'His Jacks beat your 6s. You gave up this event and kept the A♠ for the Baron.')}}
  if(ev==2){const aS=has('A♠'),jk=['3♦','4♥','6♦','6♣'].find(has);
-  if(pick)return aS?{a:'play',hl:'noble',t:'Event 3: the Joust',x:'There are two 7s on the table now. Your 7♦ makes three of a kind, and the A♠ is the highest Spade for the Baron. Tap A♠ and 7♦, then Lock in.',c:['A♠','7♦']}
-   :{a:'choose',hl:'comm',t:'Event 3: the Joust, your choice',x:'Two 7s are on the table, so your 7♦ makes three of a kind and wins either way. The last event, Champion, is played with a single card, and your Q♥ pairs the Queen on the table. Spend it for a full house, or save it?',o:[{l:'7♦ Q♥: full house',c:['7♦','Q♥']},{l:'7♦ '+jk+': save the Q♥',c:['7♦',jk]}]};
+  if(pick)return aS?{a:'play',hl:'noble',t:'Event 3: the Joust',x:'The dealer adds a fourth community card: now there are two 7s on the table. Your 7♦ makes three of a kind, and the A♠ is the highest Spade for the Baron. Tap A♠ and 7♦, then Lock in.',c:['A♠','7♦']}
+   :{a:'choose',hl:'comm',t:'Event 3: the Joust, your choice',x:'The dealer adds a fourth community card: two 7s on the table, so your 7♦ makes three of a kind and wins either way. The last event, Champion, is played with a single card, and your Q♥ pairs the Queen on the table. Spend it for a full house, or save it?',o:[{l:'7♦ Q♥: full house',c:['7♦','Q♥']},{l:'7♦ '+jk+': save the Q♥',c:['7♦',jk]}]};
   if(!chose(1,'A♠'))return{a:'cont',hl:'noble',t:'A trophy and a crown!',x:'Three 7s win the Q♥, and the Baron gives you his crown: 4 points. Saving the A♠ paid off twice.'};
   return{a:'cont',hl:'noble',t:'You win the Q♥, but…',x:'Sir Roland played the J♠, the highest Spade this time, so he takes the Baron\'s crown (4 points). Your A♠ would have won it.'+(chose(2,'Q♥')?' You also spent your Q♥, so your best single card for Champion is gone.':' Your Q♥ is still saved for Champion.')}}
  if(ev==3){const kk=has('K♥');
-  if(pick)return kk?{a:'play',hl:'comm',t:'Event 4: Grand Melee',x:'The fifth community card is a King! Your saved Kings now make a full house: three Kings and two 7s. Tap K♥ and K♣, then Lock in.',c:['K♥','K♣']}
-   :{a:'play',hl:'comm',t:'Event 4: Grand Melee',x:'The fifth community card is a King: your Kings would have made a full house here. Your 6s only make two pair, so give them up and keep your best single cards for Champion. Tap 6♦ and 6♣, then Lock in.',c:['6♦','6♣']};
+  if(pick)return kk?{a:'play',hl:'comm',t:'Event 4: Grand Melee',x:'The dealer adds the fifth community card: a King! Your saved Kings now make a full house: three Kings and two 7s. Tap K♥ and K♣, then Lock in.',c:['K♥','K♣']}
+   :{a:'play',hl:'comm',t:'Event 4: Grand Melee',x:'The dealer adds the fifth community card: a King. Your Kings would have made a full house here. Your 6s only make two pair, so give them up and keep your best single cards for Champion. Tap 6♦ and 6♣, then Lock in.',c:['6♦','6♣']};
   return won?{a:'cont',hl:'',t:'You win the K♥!',x:'Kings full beats Sir Roland\'s 2s full. Saving your Kings in Archery paid off.'}
    :{a:'cont',hl:'',t:'Sir Roland takes the K♥',x:'His full house (three 2s, two 7s) wins. You traded this trophy for Archery: that was your choice.'}}
  if(ev==4){const left=g.P[0].hand.map(c=>RK[c.r]+SU[c.s]);
@@ -423,7 +436,7 @@ function startTut(){const nm=myName()||'You';
   g.deck=TUT_COMM.map(C).reverse();g.comm=[];
   g.nobles=[{n:HZ.NOB.find(n=>n.id=='b-jo'),sp:[null,null]}];
   for(let i=0;i<5;i++){const s=TUT_TROPHY[i];g.trs[i]={s,r:HZ.TR[i],h:[s,...[0,1,2,3].filter(x=>x!=s)]}}
-  TUT={g,stage:0,ch:{},done:false};S={room:{code:'TUTORIAL',you:0,host:0,size:2,cfg:g.cfg,seats:[{name:nm,online:true},{name:'Sir Roland',bot:true,online:true}]}};
+  TUT={g,stage:0,ch:{},done:false,dealt:0,oppDealt:0,dealStarted:false,dealDone:false,deckVis:true,commFrom:null};S={room:{code:'TUTORIAL',you:0,host:0,size:2,cfg:g.cfg,seats:[{name:nm,online:true},{name:'Sir Roland',bot:true,online:true}]}};
   order=[];sel=[];tutOppReady();tutView();render();scrollTo(0,0)}
 function exitTut(){TUT=null;S=null;G=null;order=[];sel=[];render()}
 function tutNext(){const st=tutStep();if(st.a=='next'){TUT.stage++;render()}else if(st.a=='cont')send({t:'cont'})}
@@ -436,16 +449,36 @@ function tutSend(m){const g=TUT.g,st=tutStep();
     if(!hit){toast(st.a=='choose'?'Pick one of the choices in the herald\'s box.':'Play the glowing cards for this lesson.');return}
     TUT.ch[g.ev]=hit.slice();HZ.play(g,0,m.cards);HZ.reveal(g);sel=[];tutView();render()}
   else if(m.t=='unplay'){HZ.unplay(g,0);tutView();render()}
-  else if(m.t=='cont'&&st.a=='cont'){if(g.ev==4){TUT.done=true;tutView();render();return}HZ.nxt(g);tutOppReady();tutView();render()}
+  else if(m.t=='cont'&&st.a=='cont'){if(g.ev==4){TUT.done=true;tutView();render();return}const before=g.comm.length;HZ.nxt(g);if(g.comm.length>before){TUT.commFrom=before;TUT.deckVis=true}tutOppReady();tutView();render()}
   else if(m.t=='leave')exitTut()}
 function coachHTML(){const st=tutStep();let btn='';
-  if(st.a=='next')btn='<button class="b" onclick="tutNext()">Next</button>';
+  if(st.a=='next')btn=st.deal&&!TUT.dealDone?'<button class="b" disabled>Dealing…</button>':'<button class="b" onclick="tutNext()">Next</button>';
   else if(st.a=='cont')btn='<button class="b" onclick="tutNext()">Continue</button>';
   else if(st.a=='end')btn='<button class="b" onclick="exitTut();solo()">Play a practice game</button><button class="b ghost" onclick="exitTut()">Back to home</button>';
   const opts=st.a=='choose'?`<div class="copts">${st.o.map((o,i)=>{const on=o.c.length==sel.length&&o.c.map(C).every(c=>sel.includes(ck(c)));return `<button class="b cop ${on?'on':''}" onclick="tutChoose(${i})">${o.l}</button>`}).join('')}</div>`:'';
   return `<div class="coach"><div class="ch"><span class="cht">${st.t}</span></div><p>${st.x}</p>${opts}${btn?`<div class="cb">${btn}</div>`:''}</div>`}
-function tutAfterRender(){}
-addEventListener('resize',()=>{if(G)render()});
+function tutAfterRender(){const st=tutStep();
+  if(st.deal&&!TUT.dealStarted){TUT.dealStarted=true;runDeal()}
+  if(TUT.commFrom!=null){const f=TUT.commFrom;TUT.commFrom=null;animComm(f)}}
+const RMO=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+function deckXY(){const d=document.querySelector('.deckpile');if(!d)return null;const r=d.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}}
+function flyBack(from,tgt,done){const r=tgt.getBoundingClientRect(),f=document.createElement('div');f.className='flyc';f.style.left=(from.x-18)+'px';f.style.top=(from.y-25)+'px';document.body.appendChild(f);
+  const dx=r.left+r.width/2-from.x,dy=r.top+r.height/2-from.y;
+  const a=f.animate([{transform:'translate(0,0) rotate(0deg) scale(.9)'},{transform:`translate(${dx}px,${dy}px) rotate(${dx>0?10:-10}deg) scale(1.05)`}],{duration:430,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'});
+  a.onfinish=()=>{f.remove();done()}}
+function runDeal(){const finish=()=>{TUT.dealt=10;TUT.oppDealt=10;TUT.dealDone=true;TUT.deckVis=false;render()};
+  if(RMO()||!deckXY())return finish();
+  for(let q=0;q<20;q++){const me=q%2==0,idx=q>>1;
+    setTimeout(()=>{if(!TUT||TUT.dealDone)return;const from=deckXY(),tgt=me?document.querySelectorAll('.hand .c')[idx]:document.querySelector('.pseat .plate');
+      if(!from||!tgt)return;
+      flyBack(from,tgt,()=>{if(!TUT||TUT.dealDone)return;if(me)TUT.dealt=Math.max(TUT.dealt,idx+1);else TUT.oppDealt=Math.max(TUT.oppDealt,idx+1);
+        if(TUT.dealt>=10&&TUT.oppDealt>=10)return finish();render()})},250+q*130)}}
+function animComm(from){const d=deckXY(),els=[...document.querySelectorAll('.ctr .cm .c:not(.ph)')].slice(from);
+  if(RMO()||!d||!els.length){TUT.deckVis=false;return render()}
+  els.forEach((el,j)=>{const r=el.getBoundingClientRect(),dx=d.x-(r.left+r.width/2),dy=d.y-(r.top+r.height/2);
+    el.animate([{transform:`translate(${dx}px,${dy}px) scale(.55)`,opacity:.3},{transform:'none',opacity:1}],{duration:520,delay:300+j*260,easing:'cubic-bezier(.2,.7,.3,1)',fill:'backwards'})});
+  setTimeout(()=>{if(TUT){TUT.deckVis=false;render()}},300+els.length*260+700)}
+addEventListener('resize',()=>{if(G)render()});if(window.visualViewport)visualViewport.addEventListener('resize',()=>{if(G)render()});
 try{document.documentElement.style.setProperty('--back',`url("${BACK}")`)}catch(_){}
 render();connect();
 </script></body></html>
