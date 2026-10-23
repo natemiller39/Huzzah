@@ -149,7 +149,7 @@ button.b.sm{font-size:12px;padding:5px 9px;margin:0}
 .spot .cs{display:flex;gap:2px}.spot .c{--cw:28px;box-shadow:0 3px 5px rgba(60,35,10,.45)}.tbl.k4 .spot .c{--cw:24px}
 .hn2{font-size:10px;font-weight:700;color:#3a2810;background:rgba(239,226,192,.95);border-radius:0 0 6px 6px;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pseat .pm:has(+.hn2){border-radius:0}
 .prize .c{box-shadow:0 0 0 2px #e3b43f,0 0 10px rgba(227,180,63,.8)}
-.spot.me .c{--cw:40px}.spot.me .c.ph{background:rgba(90,60,25,.16);border:1px dashed rgba(60,40,15,.55);box-shadow:none}
+.spot.me .c{--cw:40px}.spot.me .c.ph{visibility:hidden}
 .spot small{font-size:10px;font-weight:700;color:#3a2810;background:rgba(239,226,192,.9);border-radius:6px;padding:0 5px;margin-top:2px;white-space:nowrap}
 .spot.win .cs{filter:drop-shadow(0 0 7px var(--pc))}
 .ctr{position:absolute;left:0;right:0;z-index:2}.ctr .evn{color:#3a2810;font-size:15px;text-align:center;margin-top:3px;font-family:"IM Fell English SC",Georgia,serif}
@@ -326,10 +326,18 @@ const viewH=()=>Math.min(innerHeight,window.visualViewport?visualViewport.height
 function buildHTML(){let h='';
   if(!connected&&!TUT)h+=`<div class="conn">${S?'Connection lost. Reconnecting…':'Connecting to the HUZZAH! server…'}</div>`;
   if(!S)h+=homeHTML();else if(!G)h+=lobbyHTML();else h+=gameHTML();return h}
+/* keep my played cards clear of the trophy + community row: lift the row into free space, then make the table taller (fit-to-screen zooms if needed) */
+function fixTable(){const t=document.querySelector('.tbl'),me=t&&t.querySelector('.spot.me .cs'),c=t&&t.querySelector('.ctr');if(!me||!c)return;
+  const R=e=>e.getBoundingClientRect(),parts=[...c.querySelectorAll('.tro1,.cm .row')].map(R);if(!parts.length)return;
+  const U={l:Math.min(...parts.map(r=>r.left)),r:Math.max(...parts.map(r=>r.right)),t:Math.min(...parts.map(r=>r.top)),b:Math.max(...parts.map(r=>r.bottom))};
+  let over=Math.max(U.b,R(c).bottom)+6-R(me).top;if(over<=0)return;
+  let lim=R(t).top+6;t.querySelectorAll('.pseat,.spot:not(.me),.deckpile').forEach(e=>{const r=R(e);if((r.top+r.bottom)/2<U.t&&r.right>U.l&&r.left<U.r)lim=Math.max(lim,r.bottom+4)});
+  const up=Math.min(over,Math.max(0,Math.floor(U.t-lim)));if(up){c.style.top=(parseFloat(c.style.top)-up)+'px';over-=up}
+  if(over>0){const sp=me.parentNode;over=Math.ceil(over);sp.style.top=(parseFloat(sp.style.top)+over)+'px';t.style.height=(parseFloat(t.style.height)+over)+'px'}}
 function render(){const app=document.getElementById('app');
-  app.className=TUT?'tut hl-'+(tutStep().hl||''):'';document.documentElement.classList.toggle('onhome',!S&&!TUT);app.style.zoom='';FIT_SHRINK=0;app.innerHTML=buildHTML();
+  app.className=TUT?'tut hl-'+(tutStep().hl||''):'';document.documentElement.classList.toggle('onhome',!S&&!TUT);app.style.zoom='';FIT_SHRINK=0;app.innerHTML=buildHTML();fixTable();
   if(G&&G.phase!='end'){const de=document.documentElement,avail=viewH();let over=de.scrollHeight-avail;
-    if(over>0){FIT_SHRINK=over;app.innerHTML=buildHTML();over=de.scrollHeight-avail}
+    if(over>0){FIT_SHRINK=over;app.innerHTML=buildHTML();fixTable();over=de.scrollHeight-avail}
     if(over>0)app.style.zoom=Math.max(0.6,avail/de.scrollHeight).toFixed(3)}
   if(G)dragSetup();if(TUT)tutAfterRender()}
 
