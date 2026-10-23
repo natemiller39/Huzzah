@@ -128,6 +128,48 @@ button.b.sm{font-size:12px;padding:5px 9px;margin:0}
 .lists .c.ph{background:rgba(90,60,25,.16);border:1px dashed rgba(60,40,15,.55);box-shadow:none}
 .lists .c{box-shadow:0 3px 5px rgba(60,35,10,.45)}
 .you{border:0;border-top:5px solid var(--pc);border-radius:4px 4px 12px 12px;background:linear-gradient(180deg,rgba(25,16,8,.78),rgba(25,16,8,.62))}
+
+/* card table */
+.c.tb{background:var(--back) center/cover;border:0}
+.tbl{position:relative;margin:6px 0 2px}
+.tbl .top{position:absolute;left:0;right:0;top:20px;bottom:0;border-radius:50%;border:12px solid #5b3a1e;
+ background:repeating-linear-gradient(0deg,rgba(120,85,40,.09) 0 2px,transparent 2px 7px),radial-gradient(ellipse at 50% 48%,#ebd29a,#c99f5e 82%);
+ box-shadow:inset 0 0 0 2px #8a6a3a,inset 0 0 26px rgba(80,50,15,.5),0 8px 18px rgba(0,0,0,.5)}
+.tbl .tilt{position:absolute;left:11%;right:11%;height:8px;border-radius:3px;background:repeating-linear-gradient(90deg,#3e2614 0 5px,#7a5028 5px 44px);box-shadow:0 3px 4px rgba(0,0,0,.3)}
+.pseat{position:absolute;z-index:3;transform:translate(-50%,-50%);width:78px;text-align:center}
+.tbl.k4 .pseat{width:64px}.tbl.k4 .fan{height:24px}.tbl.k4 .fan i{width:15px;height:21px}.tbl.k4 .plate{font-size:11px}
+.fan{position:relative;height:28px;display:flex;justify-content:center;align-items:flex-end;margin-bottom:-6px}
+.fan i{width:17px;height:24px;margin:0 -5px;border-radius:2px;background:var(--back) center/cover;box-shadow:0 1px 2px rgba(0,0,0,.5);transform:rotate(var(--r));transform-origin:50% 120%}
+.fan b{position:absolute;right:2px;top:0;font-size:10px;line-height:15px;min-width:15px;color:#fff;background:#222;border-radius:8px;padding:0 3px}
+.plate{position:relative;display:flex;align-items:center;justify-content:center;gap:3px;background:rgba(25,16,8,.88);border-top:3px solid var(--pc);border-radius:6px 6px 0 0;padding:2px 3px;font-size:12px}
+.plate .chip{width:15px;height:15px;font-size:9px}.plate b{font-family:"IM Fell English SC",Georgia,serif;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pm{font-size:10px;background:rgba(25,16,8,.72);border-radius:0 0 6px 6px;padding:1px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pseat.win .plate{box-shadow:0 0 14px var(--pc)}.pseat.off{opacity:.55}.pseat .b.sm{font-size:10px;padding:2px 5px;margin-top:2px}
+.spot{position:absolute;z-index:2;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center}
+.spot .cs{display:flex;gap:2px}.spot .c{--cw:28px;box-shadow:0 3px 5px rgba(60,35,10,.45)}.tbl.k4 .spot .c{--cw:24px}
+.hn2{font-size:10px;font-weight:700;color:#3a2810;background:rgba(239,226,192,.95);border-radius:0 0 6px 6px;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pseat .pm:has(+.hn2){border-radius:0}
+.prize .c{box-shadow:0 0 0 2px #e3b43f,0 0 10px rgba(227,180,63,.8)}
+.spot.me .c{--cw:40px}.spot.me .c.ph{background:rgba(90,60,25,.16);border:1px dashed rgba(60,40,15,.55);box-shadow:none}
+.spot small{font-size:10px;font-weight:700;color:#3a2810;background:rgba(239,226,192,.9);border-radius:6px;padding:0 5px;margin-top:2px;white-space:nowrap}
+.spot.win .cs{filter:drop-shadow(0 0 7px var(--pc))}
+.ctr{position:absolute;left:0;right:0;z-index:2}.ctr .evn{color:#3a2810;font-size:15px;text-align:center;margin-top:3px;font-family:"IM Fell English SC",Georgia,serif}
+.ctr .lrow{gap:5px}.ctr .tro1 small{color:#3a2810}.ctr .c.ph{background:rgba(90,60,25,.16);border:1px dashed rgba(60,40,15,.55);box-shadow:none}
+.ctr .c{box-shadow:0 3px 5px rgba(60,35,10,.45)}
+.hsec{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;margin:4px 0 0;opacity:.95}.hsec .rb{margin:0;padding:3px 9px}
+.hand{padding:24px 0 8px;overflow:visible}
+.hand .c{transform:translateY(var(--y,0px)) rotate(var(--r,0deg));transform-origin:50% 130%;transition:transform .15s ease}
+.hand .c.sel{transform:translateY(calc(var(--y,0px) - 20px)) rotate(var(--r,0deg))}
+.hand .c.hb{--cw:58px;margin-left:-30px;flex:none}.hand .c.hb:first-child{margin-left:0}
+@media (prefers-reduced-motion:reduce){.hand .c{transition:none}}
+
+.obsheet{position:fixed;left:0;right:0;bottom:0;z-index:8;max-width:680px;margin:0 auto;background:rgba(24,15,7,.97);border-top:3px solid #e3b43f;border-radius:16px 16px 0 0;padding:12px 10px calc(14px + env(safe-area-inset-bottom,0px));text-align:center;box-shadow:0 -8px 24px rgba(0,0,0,.55)}
+.obt{font-family:"IM Fell English SC",Georgia,serif;font-size:19px;color:#efe2c0}.obsub{font-size:13px;opacity:.85;margin:2px 0 10px}
+.obsheet .ob{width:96px}.obsheet .obrow{gap:12px}
+.obsw{display:block;margin:3px auto 0!important;font-size:10px!important;padding:2px 7px!important}
+.fin .fw{font-family:"IM Fell English SC",Georgia,serif;font-size:20px;text-align:center;color:var(--ac);margin:2px 0 8px}
+.res2{background:rgba(0,0,0,.18);border-radius:10px;padding:6px 8px;margin:6px 0}.res2.win{background:rgba(242,193,78,.2);outline:1px solid var(--ac)}
+.rh{display:flex;align-items:center;gap:6px}.rh .rk{font-weight:800;width:16px;text-align:center}.rh b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh .rt{font-weight:800;font-size:16px}
+.rc{display:flex;gap:3px;margin:5px 0 3px}.rc .c{--cw:34px}.rd{font-size:12px;opacity:.9}
 </style></head><body><div id="app"></div>
 <script src="assets.js"></script>
 <script src="engine.js?v=29"></script>
@@ -182,7 +224,9 @@ function leave(){if(G&&G.phase!='end'&&!confirm('Leave this game? A bot will tak
 function pick(i){if(Date.now()-dragAt<400||!G||G.phase!='pick')return;const p=myP();if(p.sel||needOb(G,p))return;const k=order[i],j=sel.indexOf(k);if(j>=0)sel.splice(j,1);else if(sel.length<EV[G.ev][1])sel.push(k);render()}
 function lockIn(){if(sel.length!=EV[G.ev][1])return;send({t:'play',cards:selCards().map(c=>({s:c.s,r:c.r}))})}
 function unlock(){send({t:'unplay'})}
-function pickObj(k){send({t:'obj',k})}
+let obOpen=false;
+function pickObj(k){obOpen=false;send({t:'obj',k});render()}
+function canSwitchOb(){const h0=myP();return G&&G.phase=='pick'&&!G.hist.length&&!h0.rf&&h0.ob!=null&&h0.oc&&h0.oc.length>1}
 function cont(){send({t:'cont'})}
 function setCfg(k,v){const c={};c[k]=v;send({t:'cfg',cfg:c})}
 function setHP(i,v){const a=S.room.cfg.hp.slice();a[i]=+v||0;setCfg('hp',a)}
@@ -234,26 +278,35 @@ function lobbyHTML(){const r=S.room,host=isHost(),n=r.seats.length,bots=Math.max
   <div class="box">${settingsHTML(host)}</div>
   ${host?`<button class="b wide" onclick="send({t:'start'})">Start the tournament${bots?` (+${bots} bot${bots>1?'s':''})`:''}</button>`:`<div class="box" style="text-align:center">Waiting for ${esc(r.seats[r.host].name)} to start the game…</div>`}</div>`}
 
-function nobHTML(){const ns=G.nobles;return `<div class="stands"><div class="canopy"></div><div class="rbox nobs n${ns.length}">${ns.length?ns.map((z,ni)=>{const live=G.phase!='end'&&z.n.ev==G.ev;return `<div class="nob ${live?'on':''}" onclick="zoomN(${ni})" title="Tap to enlarge"><img src="${NIMG[z.n.id]}" alt="${z.n.name}"><div class="nbi"><div class="cap"><b>${z.n.name}</b><br>${live?'▶ ':''}${STI[z.n.ev]} ${EV[z.n.ev][0]}: ${z.n.txt}</div><div class="sp">${z.sp.map((x,i)=>`<span class="spt"><i class="${x==null?'':'f'}" ${x==null?'':`style="background:${PC[x]}"`}>${x==null?NV(G)[i]:ini(x)}</i></span>`).join('')}</div></div></div>`}).join(''):'<div class="crowd">No nobles at this tournament</div>'}</div></div>`}
+function nobHTML(){const ns=G.nobles;if(!ns.length)return'';return `<div class="stands"><div class="canopy"></div><div class="rbox nobs n${ns.length}">${ns.length?ns.map((z,ni)=>{const live=G.phase!='end'&&z.n.ev==G.ev;return `<div class="nob ${live?'on':''}" onclick="zoomN(${ni})" title="Tap to enlarge"><img src="${NIMG[z.n.id]}" alt="${z.n.name}"><div class="nbi"><div class="cap"><b>${z.n.name}</b><br>${live?'▶ ':''}${STI[z.n.ev]} ${EV[z.n.ev][0]}: ${z.n.txt}</div><div class="sp">${z.sp.map((x,i)=>`<span class="spt"><i class="${x==null?'':'f'}" ${x==null?'':`style="background:${PC[x]}"`}>${x==null?NV(G)[i]:ini(x)}</i></span>`).join('')}</div></div></div>`}).join(''):''}</div></div>`}
 function zoom(id,src,extra){let d=document.getElementById('zoom');if(!d){d=document.createElement('div');d.id='zoom';d.onclick=()=>{d.style.display='none'};document.body.appendChild(d)}d.innerHTML=`<img src="${src||NIMG[id]}">${extra||''}`;d.style.display='flex'}
 function zoomN(ni){const z=G.nobles[ni],n=z.n,live=G.phase!='end'&&n.ev==G.ev;zoom(null,NIMG[n.id],`<div class="zt"><b>${n.name}</b>${live?' · <span style="color:var(--ac)">▶ this event</span>':''}<div>${STI[n.ev]} ${EV[n.ev][0]}</div><p>${n.txt}</p><div class="zs">${z.sp.map((x,i)=>`<span><b>${NV(G)[i]} pts</b> · ${x==null?'open':esc(G.P[x].n)}</span>`).join('')}</div><small>Tap anywhere to close</small></div>`)}
 function zoomO(id){zoom(null,OIMG[id])}
 
-function obHTML(){const g=G,h0=myP();if(!g.cfg.obon||g.phase=='end'||!h0.oc||!h0.oc.length||g.cfg.od<2)return'';const ch=(!g.hist.length&&!h0.rf)||h0.ob==null;if(!ch)return'';
-  return `<div class="obs"><div class="sec">${h0.rf?'New secret objective':'Secret objective'}: tap the one to keep${h0.ob!=null?' (you can switch until the first reveal)':''}</div><div class="obrow">${h0.oc.map((o,k)=>`<div class="ob ${h0.ob==o?'sel':''}" onclick="pickObj(${k})"><img src="${OIMG[OBJ[o].id]}" alt="${OBJ[o].t}"><small>+${obv(g,o)}</small></div>`).join('')}</div></div>`}
-function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[]).length,dn=d?`<small class="obd" title="Completed objectives">✓${d} +${h0.done.reduce((a,o)=>a+obv(g,o),0)}</small>`:'';if(h0.ob==null)return dn;const o=OBJ[h0.ob],a=ach(g,o,g.me);return `<span class="obc ${a?'ok':''}" onclick="zoomO('${o.id}')" title="${o.t}"><img src="${OIMG[o.id]}" alt="${o.t}"><b>+${obv(g,h0.ob)}${a?' ✓':''}</b></span>${dn}`}
+function obHTML(){const g=G,h0=myP();if(!g.cfg.obon||g.phase=='end'||!h0.oc||!h0.oc.length||g.cfg.od<2)return'';if(!(h0.ob==null||(obOpen&&canSwitchOb())))return'';
+  return `<div class="obsheet"><div class="obt">${h0.rf?'You completed your objective! Choose a new one':'Choose your secret objective'}</div><div class="obsub">Only you can see it. ${h0.rf?'It scores if you complete it from now on.':'You can change it until the first cards are revealed.'}</div><div class="obrow">${h0.oc.map((o,k)=>`<div class="ob ${h0.ob==o?'sel':''}" onclick="pickObj(${k})"><img src="${OIMG[OBJ[o].id]}" alt="${OBJ[o].t}"><small>+${obv(g,o)}</small></div>`).join('')}</div></div>`}
+function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[]).length,dn=d?`<small class="obd" title="Completed objectives">✓${d} +${h0.done.reduce((a,o)=>a+obv(g,o),0)}</small>`:'';if(h0.ob==null)return dn;const o=OBJ[h0.ob],a=ach(g,o,g.me);return `<span class="obc ${a?'ok':''}" onclick="zoomO('${o.id}')" title="${o.t}"><img src="${OIMG[o.id]}" alt="${o.t}"><b>+${obv(g,h0.ob)}${a?' ✓':''}</b></span>${canSwitchOb()?'<button class="b rb obsw" onclick="obOpen=true;render()">Change</button>':''}${dn}`}
 
 function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost();
   const sch=`<div class="sch2"><div></div>${EV.map((x,i)=>`<div class="sce ${i==g.ev?'on':''}">${STI[i]}<small>${x[0]}</small></div>`).join('')}${[0,1,2,3].map(w=>`<div class="scd ${w==g.wave?'on':w<g.wave?'done':''}">D${w+1}</div>${EV.map((x,i)=>{const tr=g.trs[w*5+i],hw=g.hist.find(z=>z.w==w&&z.e==i);if(w>g.wave)return `<div class="sct hid">?</div>`;return `<div class="sct ${w==g.wave&&i==g.ev?'cur':''} ${hw?'won':''}" style="background:${COL[tr.s]}">${RK[tr.r]}${SU[tr.s]}${hw?`<i style="background:${PC[hw.win]}"></i>`:''}</div>`}).join('')}`).join('')}</div>`;
-  const lane=(i,dy)=>{const p=g.P[i],off=!p.bot&&!online(i);let cs='',lh='';
-   if(ph=='show'){cs=p.pl.map(c=>cd(c,'flip')).join('');lh=hname(g.ks[i],g.ev)}
-   else{cs=p.locked||p.bot?Array(k).fill(`<span class="bk big"><img src="${BACK}" alt=""></span>`).join(''):Array(k).fill('<span class="c ph"></span>').join('');lh=p.bot?'':p.locked?'locked ✓':off?'offline':'choosing…'}
-   const win=ph=='show'&&i==g.win;
-   return `<div class="lane ${win?'win':''} ${off?'off':''}" style="--pc:${PC[i]};margin-top:${dy||0}px"><div class="ln">${chip(i)}<b>${esc(p.n)}</b>${p.bot?'🤖':''}${win?'🏆':''}<span class="lst">${g.cfg.nn?npts(g,i)+'★ ':''}${bk(p.hc)}</span></div><div class="lc">${cs}</div>${lh?`<div class="lh">${lh}</div>`:''}<div class="row trow">${[...p.tr].sort((a,b)=>b.r-a.r||a.s-b.s).map(t=>cd(t)).join('')}</div>${host&&off&&ph!='end'?`<button class="b sm" onclick="send({t:'botify',seat:${i}})">Let a bot play</button>`:''}</div>`};
-  const others=g.P.map((_,i)=>(me+1+i)%g.n).slice(0,g.n-1),K=others.length,arc=j=>K<3?0:Math.round(Math.pow(Math.abs(j-(K-1)/2)/((K-1)/2),2)*12);
-  return `<div class="arena"><div class="herald">${sch}</div><div class="lanes ring ${K>=4?'tight':''}" style="grid-template-columns:${K==1?'minmax(0,230px)':`repeat(${K},minmax(0,1fr))`};justify-content:center">${others.map((i,j)=>lane(i,arc(j))).join('')}</div>
-  <div class="lists"><div class="tilt"></div><div class="evn">${STI[g.ev]} ${e[0]}, day ${g.wave+1}</div><div class="lrow"><div class="tro1">${tcd(T)}<small>Prize</small></div><div class="cm"><div class="row">${[0,1,2,3,4].map(i=>g.comm[i]?cd(g.comm[i]):'<span class="c ph"></span>').join('')}</div></div></div></div>
-  ${ph=='show'?g.nlog.map(t=>`<div class="nl">👑 ${esc(t)}</div>`).join('')+(g.olog||[]).map(t=>`<div class="nl">🎯 ${esc(t)}</div>`).join(''):''}</div>`}
+  const others=g.P.map((_,i)=>(me+1+i)%g.n).slice(0,g.n-1),K=others.length;
+  const H=K>=4?356:336,cy=Math.round(H/2+4),ry=Math.round(H/2-44),rowTop=cy+2,W=Math.min(innerWidth,680)-12,cx=W/2,rx=W/2-(K>=4?36:42),D=K>=4?64:78;
+  const backs=(n,cls='')=>Array(n).fill(`<span class="c tb ${cls}"></span>`).join('');
+  const fan=n=>{const m=Math.min(n,6);return `<div class="fan">${Array.from({length:m},(_,q)=>`<i style="--r:${((q-(m-1)/2)*13).toFixed(0)}deg"></i>`).join('')}<b>${n}</b></div>`};
+  let seats='',spots='';
+  others.forEach((i,j)=>{const p=g.P[i],off=!p.bot&&!online(i),win=ph=='show'&&i==g.win,a=Math.PI*(1-(j+0.5)/K),c=Math.cos(a),sn=Math.sin(a);
+   const x=cx+rx*c,y=cy-ry*sn,dx=cx-x,dy=cy-y,dl=Math.hypot(dx,dy)||1,sx=Math.round(x+dx/dl*D),sy=Math.min(Math.round(y+dy/dl*D),rowTop-30);
+   const stat=ph!='pick'||p.bot?'':p.locked?' · ready':off?' · offline':' · choosing';
+   seats+=`<div class="pseat ${win?'win':''} ${off?'off':''}" style="left:${Math.round(x)}px;top:${Math.round(y)}px;--pc:${PC[i]}">${fan(p.hc)}<div class="plate">${K>=4?'':chip(i)}<b>${esc(p.n)}</b>${p.bot&&K<4?'🤖':''}</div><div class="pm">${p.tr.length}🏆${g.cfg.nn?' '+npts(g,i)+'★':''}${stat}</div>${ph=='show'?`<div class="hn2">${hname(g.ks[i],g.ev)}${win?' 🏆':''}</div>`:''}${host&&off&&ph!='end'?`<button class="b sm" onclick="send({t:'botify',seat:${i}})">Bot plays</button>`:''}</div>`;
+   const cs=ph=='show'?p.pl.map(c=>cd(c,'flip')).join(''):(p.locked||p.bot)&&ph=='pick'?backs(k):'';
+   if(cs)spots+=`<div class="spot ${win?'win':''}" style="left:${sx}px;top:${sy}px;--pc:${PC[i]}"><div class="cs">${cs}</div></div>`});
+  const h0=g.P[me];let mine='',ml='';
+  if(ph=='show'){mine=h0.pl.map(c=>cd(c,'flip')).join('');ml=hname(g.ks[me],g.ev)+(g.win==me?' 🏆':'')}
+  else{const sc=selCards();mine=sc.map(c=>cd(c,'land',h0.sel?'':`pick(${order.indexOf(ck(c))})`)).join('')+Array(k-sc.length).fill('<span class="c ph"></span>').join('')}
+  const myspot=`<div class="spot me ${ph=='show'&&g.win==me?'win':''}" style="left:50%;top:${H-40}px;--pc:${PC[me]}"><div class="cs">${mine}</div>${ml?`<small>${ml}</small>`:h0.sel?'<small>Locked in</small>':''}</div>`;
+  const ctr=`<div class="ctr" style="top:${rowTop}px"><div class="lrow"><div class="tro1 prize" title="Trophy for this event">${tcd(T)}</div><div class="cm"><div class="row">${[0,1,2,3,4].map(i=>g.comm[i]?cd(g.comm[i]):'<span class="c ph"></span>').join('')}</div></div></div><div class="evn">${STI[g.ev]} ${e[0]}, day ${g.wave+1}</div></div>`;
+  return `<div class="herald">${sch}</div><div class="tbl ${K>=4?'k4':''}" style="height:${H}px"><div class="top"></div><div class="tilt" style="top:${rowTop+30}px"></div>${seats}${spots}${ctr}${myspot}</div>
+  ${ph=='show'?g.nlog.map(t=>`<div class="nl">👑 ${esc(t)}</div>`).join('')+(g.olog||[]).map(t=>`<div class="nl">🎯 ${esc(t)}</div>`).join(''):''}`}
 
 function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),host=isHost(),k=e[1],nob=needOb(g,h0);let st='',wait='';
   const names=f=>g.P.map((p,i)=>i).filter(i=>i!=me&&!g.P[i].bot&&f(i)).map(i=>esc(g.P[i].n));
@@ -269,19 +322,17 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   h+=nobHTML();
   if(ph!='end')h+=arenaHTML(T);
   else{const r=ranking(g),sm=g.cfg.sm;
-   h+=`<div class="box"><b>Winner: ${esc(r[0].p.n)}!</b> HUZZAH!${r.map((x,i)=>{const d=(x.p.done||[]).length+(x.p.ob!=null&&ach(g,OBJ[x.p.ob],x.i)?1:0),ob=g.cfg.obon?` · objective${d>1?'s':''} ${d?'✓'.repeat(d)+' +'+obp(g,x.i):'✗'}`:'';return `<div class="res ${i?'':'win'}"><b>${i+1}. ${esc(x.p.n)}</b> ${bestCards(x.p.tr).map(c=>cd(c)).join('')} <span>${x.p.tr.length?HN[best(x.p.tr)[0]]:'No trophies'} +${hpts(g,x.p)} · nobles +${npts(g,x.i)}${ob} = <b>${hpts(g,x.p)+npts(g,x.i)+obp(g,x.i)}</b></span></div>`}).join('')}<i>${sm=='pts'?'Total = hand points + noble points + secret objectives. Ties: better hand, then suit order on the last trophy.':'Best hand wins. Ties: noble points, then suit order on the last trophy.'}</i></div>`}
-  let cs='',lh='';
-  if(ph=='show'){cs=h0.pl.map(c=>cd(c,'flip')).join('');lh=hname(g.ks[me],g.ev)}
-  else if(ph=='pick'){const sc=selCards();cs=sc.map(c=>cd(c,'land',h0.sel?'':`pick(${order.indexOf(ck(c))})`)).join('')+Array(k-sc.length).fill('<span class="c ph"></span>').join('')}
+   h+=`<div class="box fin"><div class="fw">${esc(r[0].p.n)} ${r[0].i==g.me?'win':'wins'} the tournament! HUZZAH!</div>${r.map((x,i)=>{const d=(x.p.done||[]).length+(x.p.ob!=null&&ach(g,OBJ[x.p.ob],x.i)?1:0),ob=g.cfg.obon?` · objective${d>1?'s':''} ${d?'✓'.repeat(d)+' +'+obp(g,x.i):'✗'}`:'';return `<div class="res2 ${i?'':'win'}"><div class="rh"><span class="rk">${i+1}</span>${chip(x.i)}<b>${esc(x.p.n)}${x.i==g.me?' (you)':''}</b><span class="rt">${sm=='pts'?hpts(g,x.p)+npts(g,x.i)+obp(g,x.i)+' pts':''}</span></div><div class="rc">${bestCards(x.p.tr).map(c=>cd(c)).join('')||'<i>No trophies</i>'}</div><div class="rd">${x.p.tr.length?HN[best(x.p.tr)[0]]:'No hand'} +${hpts(g,x.p)}${g.cfg.nn?` · nobles +${npts(g,x.i)}`:''}${ob}</div></div>`}).join('')}<i>${sm=='pts'?'Total = hand points + noble points + secret objectives. Ties: better hand, then suit order on the last trophy.':'Best hand wins. Ties: noble points, then suit order on the last trophy.'}</i></div>`}
   let btn='';
   if(ph=='pick')btn=h0.sel?`<button class="b" onclick="unlock()">Change</button>`:`<button class="b" onclick="lockIn()" ${sel.length==k&&!nob?'':'disabled'}>Lock in</button>`;
   if(ph=='show')btn=h0.cont?`<button class="b" disabled>Waiting…</button>`:`<button class="b" onclick="cont()">${g.ev==4?(g.wave==3?'Final scores':'Next day'):'Continue'}</button>`;
   if(ph=='end')btn=host?`<button class="b" onclick="send({t:'again'})">Play again</button><button class="b ghost" onclick="send({t:'lobby'})">Lobby</button>`:`<button class="b ghost" onclick="leave()">Leave</button>`;
   const win=ph=='show'&&g.win==me;
-  h+=`<div class="you ${win?'win':''}" style="--pc:${PC[me]}"><div class="yl"><div class="ln">${chip(me)}<b>You</b>${win?'🏆':''}<span class="lst">${h0.tr.length}🏆${g.cfg.nn?' '+npts(g,me)+'★':''}</span></div><div id="st">${st}${wait?`<div class="wait">${wait}</div>`:''}${ph=='end'&&!host?'<div class="wait">The host can start a rematch.</div>':''}</div><div class="row trow">${hpill()}${tro(h0).map(tcd).join('')}</div></div>${ph!='end'?`<div class="ymid"><div class="lc">${cs}</div>${lh?`<div class="lh">${lh}</div>`:''}</div>`:''}<div class="yb">${obChip()}${btn}</div></div>`;
+  h+=`<div class="you ${win?'win':''}" style="--pc:${PC[me]}"><div class="yl"><div class="ln">${chip(me)}<b>You</b>${win?'🏆':''}<span class="lst">${h0.tr.length}🏆${g.cfg.nn?' '+npts(g,me)+'★':''}</span></div><div id="st">${st}${wait?`<div class="wait">${wait}</div>`:''}${ph=='end'&&!host?'<div class="wait">The host can start a rematch.</div>':''}</div><div class="row trow">${hpill()}${tro(h0).map(tcd).join('')}</div></div><div class="yb">${obChip()}${btn}</div></div>`;
   if(ph!='end'){const hid=nob&&!g.hist.length;
-   if(hid)h+=`<div class="sec">Hand hidden until you pick an objective</div><div class="row hand">${h0.hand.map(()=>`<span class="c art"><img src="${BACK}" alt=""></span>`).join('')}</div>`;
-   else h+=`<div class="sec hs">Your hand · drag to rearrange <button class="b rb" onclick="sortHand()">Sort</button></div><div class="row hand">${handCards().map((c,i)=>cd(c,'hd'+(sel.includes(ck(c))?' sel':''),ph=='pick'&&!h0.sel?`pick(${i})`:'')).join('')}</div>`}
+   const n=h0.hand.length,fanS=i=>{const d=i-(n-1)/2;return `--r:${(d*Math.min(5,44/Math.max(n,1))).toFixed(1)}deg;--y:${Math.min(18,d*d*1.1).toFixed(1)}px`};
+   if(hid)h+=`<div class="hsec">Your hand stays face down until you pick an objective</div><div class="row hand">${h0.hand.map((_,i)=>`<span class="c tb hb" style="${fanS(i)}"></span>`).join('')}</div>`;
+   else h+=`<div class="hsec">${ph=='pick'&&!h0.sel?`Tap ${k} card${k>1?'s':''} to play`:'Your hand'} <button class="b rb" onclick="sortHand()">Sort</button></div><div class="row hand">${handCards().map((c,i)=>cd(c,'hd'+(sel.includes(ck(c))?' sel':''),ph=='pick'&&!h0.sel?`pick(${i})`:'').replace('<span ',`<span style="${fanS(i)}" `)).join('')}</div>`}
   h+=obHTML();
   return h}
 
@@ -302,5 +353,7 @@ function dragSetup(){const row=document.querySelector('.hand');if(!row)return;
    const u=ev=>{el.removeEventListener('pointermove',m);el.removeEventListener('pointerup',u);el.removeEventListener('pointercancel',u);
     if(!mv)return;dragAt=Date.now();const cx=ev.clientX;let j=0;[...row.children].forEach((k,n)=>{if(n!=i){const r=k.getBoundingClientRect();if(r.left+r.width/2<cx)j++}});reorder(i,j)};
    el.addEventListener('pointermove',m);el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u)}})}
+addEventListener('resize',()=>{if(G)render()});
+try{document.documentElement.style.setProperty('--back',`url("${BACK}")`)}catch(_){}
 render();connect();
 </script></body></html>
