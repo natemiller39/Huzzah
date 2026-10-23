@@ -408,7 +408,9 @@ const TSTR=c=>RK[c.r]+SU[c.s],TNAME=['Archery','Sword Fight','the Joust','Grand 
 const trophyName=ev=>RK[HZ.TR[ev]]+SU[TUT_TROPHY[ev]];
 const played=(ev,t)=>(TUT.ch[ev]||[]).includes(t);
 const playedBefore=(ev,t)=>Object.keys(TUT.ch).some(e=>+e<ev&&TUT.ch[e].includes(t));
-function handDesc(cards,key,ev){if(ev==0){if(cards.length==2&&cards[0].r==cards[1].r)return'pair of '+RK[cards[0].r]+'s';return RK[Math.max(...cards.map(c=>c.r))]+' high'}return hname(key,ev).toLowerCase()}
+const RW={2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'Jack',12:'Queen',13:'King',14:'Ace'},RP=r=>(RW[r]||r)+'s';
+function handDesc(cards,key,ev){const c=key[0],a=key[1],b=key[2];
+  return c==0?RW[a]+' high':c==1?'pair of '+RP(a):c==2?'two pair, '+RP(a)+' and '+RP(b):c==3?'three '+RP(a):c==4?RW[a]+'-high straight':c==5?'flush':c==6?'full house, '+RP(a)+' full of '+RP(b):c==7?'four '+RP(a):hname(key,ev).toLowerCase()}
 function tutStep(){if(!TUT)return{};const g=TUT.g,ev=g.ev,k=EV[ev][1];
  if(TUT.stage<TUT_INTRO.length)return Object.assign({a:'next'},TUT_INTRO[TUT.stage]);
  if(TUT.done){const p=g.P[0],tr=p.tr.map(TSTR).join(' '),kept=p.hand.map(TSTR).join(' ');
@@ -424,7 +426,8 @@ function tutStep(){if(!TUT)return{};const g=TUT.g,ev=g.ev,k=EV[ev][1];
   if(ev==4)x='Play just 1 card with all five community cards. The card you don\'t play stays in your hand for the next wave. Which single card works best with this board?';
   return{a:'play',hl:ev==0?'hand':'comm',t:'Event '+(ev+1)+': '+TNAME[ev][0].toUpperCase()+TNAME[ev].slice(1),x:x+tap}}
  const won=g.win===0,mine=g.P[0].pl,his=g.P[1].pl,md=handDesc(mine,g.ks[0],ev),hd=handDesc(his,g.ks[1],ev);
- let x=won?`Your ${md} beats his ${hd}.`:`His ${hd} beats your ${md}.`;
+ const art=d=>/^(pair|full|flush)|straight$/.test(d)?'a '+d:d;
+ let x=md==hd?(won?`You both have ${art(md)}, and your other cards are higher.`:`You both have ${art(md)}, but his other cards are higher.`):won?`You win with ${art(md)} against his ${hd}.`:`He wins with ${art(hd)} against your ${md}.`;
  const any=(ts)=>ts.some(t=>played(ev,t)),good=['K♥','K♣','A♠','A♦','Q♥','7♦'];
  if(ev==0){if(played(0,'K♥')&&played(0,'K♣'))x+=' A trophy now, but your Kings are spent.';
   else if(kk)x+=won?' And your Kings are still in your hand!':' But your Kings are still in your hand. Watch what they can become later.';
