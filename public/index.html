@@ -243,6 +243,19 @@ html.onhome #app{padding:10px 10px 14px}
 .practice .opts select{min-width:0;width:100%;font-size:15px;padding:4px 6px;border-radius:7px;border:1.5px solid #a9884a;background:#fffaf0;color:var(--ink)}
 .practice .opts select:disabled{opacity:.55}
 @media (max-height:620px){.hbw{width:76px}.hsub{font-size:14px;margin:0 0 4px}.hpan .or{display:none}.hpan .b.blue{margin-top:6px}.home2 .tutb{padding:5px 12px}.hrules{top:12px}}
+.tlsn{display:flex;flex-direction:column;align-items:center;max-width:420px;margin:4px auto 0;text-align:center}
+.tl-k{font:700 13px system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:#e3b43f;margin:6px 0 8px}.tl-k.dk{color:#7a5a1e;margin:0 0 8px}
+.tstand{display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.tstand .c{--cw:clamp(84px,24vw,112px);box-shadow:0 0 0 3px #e3b43f,0 0 18px rgba(227,180,63,.7)}
+.tplinth{display:block;width:calc(clamp(84px,24vw,112px) + 44px);height:20px;margin-top:-4px;border-radius:5px;background:linear-gradient(#f0c95a,#a97e22);box-shadow:0 3px 5px rgba(0,0,0,.35)}
+.tl-h{font-family:"IM Fell English SC",Georgia,serif;font-weight:400;font-size:30px;letter-spacing:0;text-transform:none;color:#f3e7c8;margin:12px 0 4px}
+.tl-p{margin:0 12px 12px;font-size:16px;line-height:1.4;color:#f3e7c8}
+.tend{width:100%;box-sizing:border-box;background:#efe2c0;color:#2b1d0d;border-radius:14px;padding:11px 12px 10px}
+.tend p{margin:4px 0 0;font-size:15px;line-height:1.4}
+.tend-row{display:flex;justify-content:center;gap:5px}.tend-row .c{--cw:clamp(44px,calc((100vw - 76px)/5.4),62px)}
+.tend-row .c.mine{box-shadow:0 0 0 3px #e3b43f,0 0 10px rgba(227,180,63,.8)}
+.tend-r{margin-top:8px;font-family:"IM Fell English SC",Georgia,serif;font-size:21px}
+.tgot{width:100%;margin-top:10px}.tgot .b{display:block;width:100%;margin:0;padding:12px;font-size:17px}
 </style></head><body><div id="app"></div>
 <script src="assets.js"></script>
 <script src="engine.js?v=29"></script>
@@ -416,6 +429,7 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   if(ph=='end')st='Tournament over!';
   const tro=p=>[...p.tr].sort((a,b)=>b.r-a.r||a.s-b.s);
   let h=`<div class="topbar"><button class="b sm ghost" onclick="leave()">Leave</button><b class="ttl">HUZZAH!</b><span>${TUT?'<b>Tutorial</b>':`Room <b>${S.room.code}</b>`} <button class="b sm ghost" onclick="scores(1)">Scores</button> <button class="b sm ghost" onclick="rules(1)">Rules</button></span></div>`;
+  if(TUT&&tutStep().solo=='trophy')return h+trophyLesson(T);
   if(TUT)h+=coachHTML();
   h+=TUT&&G.ev<1?'':nobHTML();
   if(ph!='end')h+=arenaHTML(T);
@@ -462,7 +476,7 @@ const TUT_COMM=['7♥','2♣','9♦','7♣','K♦'],TUT_OPP_PLAYS=[['8♦','8♣
 const TUT_INTRO=[
  {hl:'table',t:'Welcome to the tournament!',x:'You face Sir Roland in five events. In each one you both secretly play cards from your hand, and the best poker hand wins that event\'s trophy. First, the cards are dealt.'},
  {hl:'hand',t:'The deal',x:'The dealer deals you and Sir Roland 10 cards each. Watch them land in your hand at the bottom of the screen: these are your cards for the whole wave, and only you can see them.',deal:true},
- {hl:'prize',t:'Win trophies',x:'This event\'s trophy sits on the gold stand in the middle of the table. At the end, your best five trophies make a poker hand worth points. The trophy also breaks ties: if two hands are equal, cards in the trophy\'s own suit win, and the small suit symbols at the bottom of the trophy show the order for the other suits.'},
+ {hl:'',solo:'trophy',t:'Win trophies',x:'<b>Every event has one trophy card on the gold stand.</b> Win the event and the trophy is yours to keep.'},
  {hl:'hand',t:'Every card counts',x:'You hold 10 cards and play 9 this wave: 2 in each event, 1 in the last. A card spent now is gone later. The game is deciding when to play your best cards and when to save them.'}];
 const has=(t)=>TUT.g.P[0].hand.some(c=>HZ.same(c,C(t)));
 const chose=(ev,t)=>TUT.ch[ev]&&TUT.ch[ev].includes(t);
@@ -533,6 +547,13 @@ function tutSend(m){const g=TUT.g,st=tutStep();
   else if(m.t=='unplay'){HZ.unplay(g,0);tutView();render()}
   else if(m.t=='cont'&&st.a=='cont'){if(g.ev==4){TUT.done=true;tutView();render();return}const before=g.comm.length;HZ.nxt(g);if(g.comm.length>before){TUT.commFrom=before;TUT.deckVis=true}tutOppReady();tutView();render()}
   else if(m.t=='leave')exitTut()}
+/* tutorial: standalone "Win trophies" screen (no table) */
+function trophyLesson(T){const ex=['9♠','10♥','J♦','Q♣','K♥'].map(C),pts=G.cfg.hp[4];
+  return `<div class="tlsn"><div class="tl-k">This is a trophy</div><div class="tstand">${cd(T)}<i class="tplinth"></i></div>
+  <h2 class="tl-h">Win trophies</h2><p class="tl-p">Every event has one trophy card on the gold stand. Win the event and the trophy is yours to keep.</p>
+  <div class="tend"><div class="tl-k dk">At the end of the game</div><div class="tend-row">${ex.map(c=>cd(c,HZ.same(c,T)?'mine':'')).join('')}</div>
+  <div class="tend-r">Straight = ${pts} points!</div><p>Your best five trophies make a poker hand. The better the hand, the more points you score.</p></div>
+  <div class="tgot"><button class="b" onclick="tutNext()">Got it</button></div></div>`}
 function coachHTML(){const st=tutStep();let btn='';
   if(st.a=='next')btn=st.deal&&!TUT.dealDone?'<button class="b" disabled>Dealing…</button>':'<button class="b" onclick="tutNext()">Next</button>';
   else if(st.a=='cont')btn='<button class="b" onclick="tutNext()">Continue</button>';
