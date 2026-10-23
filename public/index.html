@@ -457,8 +457,8 @@ function startTut(){const nm=myName()||'You';
 function exitTut(){TUT=null;S=null;G=null;order=[];sel=[];render()}
 function tutNext(){const st=tutStep();if(st.a=='next'){if(st.nobleIntro)TUT.nobleIntro=true;else TUT.stage++;render()}else if(st.a=='cont')send({t:'cont'})}
 function tutChoose(i){const o=tutStep().o[i];sel=o.c.map(C).map(ck);render()}
-function tutMayTap(k){if(!tutAllowed()){toast('Read the herald first, then tap '+(tutStep().a=='cont'?'Continue':'Next')+'.');return false}return true}
-function tutCls(c){if(!TUT)return'';return tutAllowed()?'':' tdim'}
+function tutMayTap(k){const st0=tutStep();if(st0.nobleIntro&&G.phase=='pick'){TUT.nobleIntro=true;return true}if(!tutAllowed()){toast('Read the herald first, then tap '+(tutStep().a=='cont'?'Continue':'Next')+'.');return false}return true}
+function tutCls(c){if(!TUT)return'';return tutAllowed()||tutStep().nobleIntro?'':' tdim'}
 function tutSend(m){const g=TUT.g,st=tutStep();
   if(m.t=='play'&&st.a=='play'){if(!HZ.play(g,0,m.cards)){toast('Those cards can\'t be played right now.');return}
     TUT.ch[g.ev]=m.cards.map(TSTR);HZ.reveal(g);sel=[];tutView();render()}
