@@ -55,7 +55,7 @@ function nq(nb,pk,cm){const a=pk[0],b=pk[1],two=pk.length==2;
 const nkey=(nb,r)=>r.k.concat(tk(r.c,nb.h));
 
 /* ---------- state-dependent helpers (work on server state and on a player's view) ---------- */
-const NV=g=>g.cfg.nord=='asc'?[2,4]:[4,2];
+const NV=g=>g.cfg.nord=='asc'?[1,3]:[3,1];
 const TRO=g=>g.trs[Math.min(19,g.wave*5+g.ev)];
 const npts=(g,i)=>g.cl.filter(c=>c.p==i).reduce((a,c)=>a+NV(g)[c.i],0);
 const hpts=(g,p)=>p.tr.length?g.cfg.hp[best(p.tr)[0]]:0;
