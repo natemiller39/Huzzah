@@ -238,9 +238,9 @@ html.onhome #app{padding:10px 10px 14px}
 .hpan h2::before,.hpan h2::after{content:'';flex:1;height:1.5px;background:linear-gradient(90deg,transparent,rgba(27,58,128,.5),transparent)}
 .hpan .b.jn{width:auto;flex:0 0 auto;padding:10px 14px}
 .hpan .or{font-size:12px;color:#6b5733;text-align:center;margin:3px 0}
-.practice .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-bottom:7px}.practice .pgrid .opts{display:contents}
-.practice .opts label{display:flex;flex-direction:column;align-items:stretch;gap:1px;font-size:12px;color:#5a4527;margin:0}
-.practice .opts select{min-width:0;width:100%;font-size:15px;padding:4px 6px;border-radius:7px;border:1.5px solid #a9884a;background:#fffaf0;color:var(--ink)}
+.practice .pgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px 8px;margin-bottom:7px}.practice .pgrid .opts{display:contents}
+.practice .opts label{display:flex;flex-direction:column;align-items:stretch;gap:1px;font-size:11px;white-space:nowrap;overflow:hidden;color:#5a4527;margin:0}
+.practice .opts select{min-width:0;width:100%;font-size:14px;padding:4px 4px;border-radius:7px;border:1.5px solid #a9884a;background:#fffaf0;color:var(--ink)}
 .practice .opts select:disabled{opacity:.55}
 @media (max-height:620px){.hbw{width:76px}.hsub{font-size:14px;margin:0 0 4px}.hpan .or{display:none}.hpan .b.blue{margin-top:6px}.home2 .tutb{padding:5px 12px}.hrules{top:12px}}
 .tpop>.tl-k{font:400 21px "IM Fell English SC",Georgia,serif;letter-spacing:0;text-transform:none;color:#1b3a80}.tend .tl-k{font:700 12px system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase}
@@ -302,7 +302,7 @@ html,body{background:radial-gradient(ellipse 60% 45% at 8% 0%,rgba(255,150,50,.2
 @media (prefers-reduced-motion:reduce){.rpop{animation:rfade 2.6s both}.rpop.crn{animation-delay:.5s}@keyframes rfade{0%,100%{opacity:0}10%,80%{opacity:1}}}
 </style></head><body><div id="app"></div>
 <script src="assets.js"></script>
-<script src="engine.js?v=33"></script>
+<script src="engine.js?v=34"></script>
 <script>
 const {SU,COL,RK,EV,HN,OBJ,cmp,best,bestCards,hname,nq,NV,TRO,npts,hpts,ach,obv,obp,needOb,ranking}=HZ;
 const PC=['#ffd24a','#ff6b6b','#5bc0ff','#7be07b','#c58cff','#ffa94d'],STI=['🏹','⚔️','🐎','🛡️','🏅'];
@@ -312,7 +312,7 @@ const ONLINE_RULES=`<h3>Playing online</h3><ul><li><b>Create a game</b> to get a
 /* ---------- local state ---------- */
 const LS={get(){try{return JSON.parse(localStorage.getItem('hz')||'{}')}catch(_){return {}}},set(v){try{localStorage.setItem('hz',JSON.stringify(Object.assign(LS.get(),v)))}catch(_){}},del(k){try{const o=LS.get();delete o[k];localStorage.setItem('hz',JSON.stringify(o))}catch(_){}}};
 let S=null,G=null,ws=null,connected=false,wantRoom=null,order=[],sel=[],toastT=0,homeMode=null,setOpen=false,soloSize=4;
-const soloCfg=Object.assign({nn:2,od:2,rfl:0},LS.get().solo||{});
+const soloCfg=Object.assign({nn:2,od:2,rfl:0,bd:'normal'},LS.get().solo||{});
 function setSolo(k,v){soloCfg[k]=v;LS.set({solo:soloCfg});render()}
 const qs=new URLSearchParams(location.search);const inviteCode=(qs.get('room')||'').toUpperCase().slice(0,4);
 let jcode=inviteCode;
@@ -424,9 +424,9 @@ function homeHTML(){const nm=esc(LS.get().name||'');
   <div class="hpan box practice"><h2>Practice vs bots</h2><div class="pgrid"><div class="opts"><label><span>Players</span><select onchange="soloSize=+this.value">${[2,3,4,5,6].map(v=>`<option ${v==soloSize?'selected':''}>${v}</option>`).join('')}</select></label></div>${mainOpts(soloCfg,'','setSolo')}</div><button class="b blue" onclick="solo()">Play solo vs bots</button></div>
   </div>`}
 
-const OPT_NN=[[0,'Off'],[1,'1'],[2,'2'],[3,'3']],OPT_OD=[[0,'Off'],[1,'Deal 1'],[2,'Deal 2, keep 1'],[3,'Deal 3, keep 1']],OPT_RF=[[0,'Off'],[1,'Once per player'],[99,'Unlimited']];
+const OPT_NN=[[0,'Off'],[1,'1'],[2,'2'],[3,'3']],OPT_OD=[[0,'Off'],[1,'Deal 1'],[2,'Deal 2, keep 1'],[3,'Deal 3, keep 1']],OPT_RF=[[0,'Off'],[1,'Once per player'],[99,'Unlimited']],OPT_BD=[['easy','Easy'],['normal','Normal'],['hard','Hard']];
 const opts=(list,v)=>list.map(([x,t])=>`<option value="${x}" ${x==v?'selected':''}>${t}</option>`).join('');
-function mainOpts(c,dis,fn){return `<div class="opts"><label><span>Nobles</span><select ${dis} onchange="${fn}('nn',+this.value)">${opts(OPT_NN,c.nn)}</select></label><label><span>Secret objectives</span><select ${dis} onchange="${fn}('od',+this.value)">${opts(OPT_OD,c.od)}</select></label><label><span>Objective refills</span><select ${dis||(c.od?'':'disabled')} onchange="${fn}('rfl',+this.value)">${opts(OPT_RF,c.rfl)}</select></label></div>`}
+function mainOpts(c,dis,fn){return `<div class="opts"><label><span>Nobles</span><select ${dis} onchange="${fn}('nn',+this.value)">${opts(OPT_NN,c.nn)}</select></label><label><span>Secret objectives</span><select ${dis} onchange="${fn}('od',+this.value)">${opts(OPT_OD,c.od)}</select></label><label><span>Objective refills</span><select ${dis||(c.od?'':'disabled')} onchange="${fn}('rfl',+this.value)">${opts(OPT_RF,c.rfl)}</select></label><label><span>Bot skill</span><select ${dis} onchange="${fn}('bd',this.value)">${opts(OPT_BD,c.bd||'normal')}</select></label></div>`}
 function settingsHTML(edit){const c=S.room.cfg,dis=edit?'':'disabled';
   return `<div class="sec">Game options${edit?'':' · the host sets these'}</div>${mainOpts(c,dis,'setCfg')}<details ${setOpen?'open':''} ontoggle="setOpen=this.open" class="set"><summary>More playtest settings</summary>
   <label>Noble spots: <select ${dis} onchange="setCfg('nord',this.value)"><option value="desc" ${c.nord=='desc'?'selected':''}>3 / 2 (first claim best)</option><option value="asc" ${c.nord=='asc'?'selected':''}>2 / 3 (last claim best)</option></select></label>

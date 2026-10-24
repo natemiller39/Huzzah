@@ -52,6 +52,7 @@ function applyCfg(cfg, c) {
   if ([0, 1, 2, 3].includes(c.nn)) cfg.nn = c.nn;
   if ([0, 1, 2, 3].includes(c.od)) cfg.od = c.od;
   if ([0, 1, 99].includes(c.rfl)) cfg.rfl = c.rfl;
+  if (['easy', 'normal', 'hard'].includes(c.bd)) cfg.bd = c.bd;
   if (c.sm === 'pts' || c.sm === 'hand') cfg.sm = c.sm;
   if (Array.isArray(c.hp) && c.hp.length === 10) cfg.hp = c.hp.map(x => Math.max(0, Math.min(99, x | 0)));
   if (Array.isArray(c.obv) && c.obv.length === HZ.OBJ.length) cfg.obv = c.obv.map(x => Math.max(0, Math.min(99, x | 0)));

@@ -18,7 +18,7 @@ const NOB=[
 {id:'j-ch',name:'The Jester',ev:4,kind:'lowdia',h:[4,3,0,2,1],txt:'Lowest Diamond'}];
 const OBJ=[{id:'ch5',t:'Win Champion with a 5 or lower',k:'ch5',v:5},{id:'flush',t:'Win with a flush',k:'hand',cat:5,v:3},{id:'gm13',t:'Win day 1 or 3 Grand Melee',k:'ev',ev:3,ws:[0,2],v:2},{id:'fh',t:'Win with a full house',k:'hand',cat:6,v:3},{id:'ch24',t:'Win day 2 or 4 Champion',k:'ev',ev:4,ws:[1,3],v:2},{id:'kq',t:'Win with a king and queen from your pocket',k:'kq',v:5},{id:'trips',t:'Win with 3 of a kind',k:'hand',cat:3,v:2},{id:'ch13',t:'Win day 1 or 3 Champion',k:'ev',ev:4,ws:[0,2],v:2},{id:'jo24',t:'Win day 2 or 4 Joust',k:'ev',ev:2,ws:[1,3],v:2},{id:'ar24',t:'Win day 2 or 4 Archery',k:'ev',ev:0,ws:[1,3],v:2},{id:'jo13',t:'Win day 1 or 3 Joust',k:'ev',ev:2,ws:[0,2],v:2},{id:'sf24',t:'Win day 2 or 4 Sword Fight',k:'ev',ev:1,ws:[1,3],v:2},{id:'str',t:'Win with a straight',k:'hand',cat:4,v:2},{id:'gm24',t:'Win day 2 or 4 Grand Melee',k:'ev',ev:3,ws:[1,3],v:2},{id:'sf13',t:'Win day 1 or 3 Sword Fight',k:'ev',ev:1,ws:[0,2],v:2},{id:'ar13',t:'Win day 1 or 3 Archery',k:'ev',ev:0,ws:[0,2],v:2}];
 /* nn: nobles in play (0-3); od: objectives dealt per player (0 = off); rfl: objective refills (0 off, 1 once, 99 unlimited) */
-const defaultCfg=()=>({nord:'desc',obon:true,sm:'pts',hp:HP0.slice(),obv:OBJ.map(o=>o.v),nn:2,od:2,rfl:0});
+const defaultCfg=()=>({nord:'desc',obon:true,sm:'pts',hp:HP0.slice(),obv:OBJ.map(o=>o.v),nn:2,od:2,rfl:0,bd:'normal'});
 
 /* ---------- pure helpers ---------- */
 const srt=(a,b)=>a.r-b.r||a.s-b.s;
@@ -73,12 +73,15 @@ function begin(g){while(g.comm.length<EV[g.ev][2])g.comm.push(g.deck.pop())}
 function deal(g){const kept=g.P.map(p=>p.hand.slice()),kc=[].concat(...kept),d=[];
  for(let s=0;s<(g.n>4?5:4);s++)for(let r=2;r<=14;r++)if(!kc.some(c=>c.s==s&&c.r==r))d.push({s,r});shuf(d);
  g.P.forEach((p,i)=>{p.hand=kept[i].concat(d.splice(0,10-kept[i].length)).sort(srt);p.pl=[];p.sel=null});g.deck=d;g.comm=[];begin(g)}
+/* bots keep the objective that is easiest to finish: event wins first, then the higher reward */
+const OBE={ev:3,hand:1,kq:1,ch5:2};
+function botObj(oc){return oc.slice().sort((a,b)=>(OBE[OBJ[b].k]||0)*2+OBJ[b].v*.5-(OBE[OBJ[a].k]||0)*2-OBJ[a].v*.5+Math.random()-.5)[0]}
 function newGame(players,cfg){const n=players.length;cfg=Object.assign(defaultCfg(),cfg||{});cfg.obon=cfg.od>0;
  const trs=new Array(20),HS=[0,1,2,3].map(s=>shuf(perm([0,1,2,3,4].slice(0,n>4?5:4).filter(x=>x!=s))).slice(0,5));
  TR.forEach((r,i)=>{const ws=shuf([0,1,2,3]);for(let w=0;w<4;w++){const s=ws[w];trs[w*5+i]={s,r,h:[s,...HS[s][i]]}}});
  const g={n,cfg,P:players.map(x=>({n:x.name,bot:!!x.bot,hand:[],tr:[],pl:[],sel:null,cont:false,oc:[],ob:null,done:[],rf:0,obAt:0})),trs,wave:0,ev:0,phase:'pick',gain:[],nd:shuf(NOB.slice()),nobles:[],cl:[],nlog:[],olog:[],hist:[],ks:null,win:null};
  const od=shuf(OBJ.map((_,i)=>i));g.od=od;
- if(cfg.obon)g.P.forEach(p=>{for(let k=0;k<cfg.od;k++)p.oc.push(od.length?od.pop():Math.random()*OBJ.length|0);p.ob=(p.bot||cfg.od==1)?p.oc[Math.random()*p.oc.length|0]:null});
+ if(cfg.obon)g.P.forEach(p=>{for(let k=0;k<cfg.od;k++)p.oc.push(od.length?od.pop():Math.random()*OBJ.length|0);p.ob=p.bot?botObj(p.oc):cfg.od==1?p.oc[0]:null});
  for(let i=0;i<cfg.nn;i++)g.nobles.push({n:drawNoble(g,g.nobles.map(z=>z.n)),sp:[null,null]});
  deal(g);return g}
 /* bots play like people: each has a temperament, gets tilted by losing streaks, cocky after a win, and sometimes goes with a gut call */
@@ -87,19 +90,40 @@ function newGame(players,cfg){const n=players.length;cfg=Object.assign(defaultCf
    and hold on to cards that qualify for nobles coming later in the wave. */
 const MOODS={cold:{sv:1,nz:150,nb:1,slip:0,plan:0},hothead:{sv:.55,nz:260,nb:1,slip:.08,plan:1},miser:{sv:1.5,nz:260,nb:1,slip:.06,plan:1},glory:{sv:.9,nz:260,nb:1.8,slip:.06,plan:1},gambler:{sv:.85,nz:480,nb:1.2,slip:.12,plan:1},steady:{sv:1,nz:220,nb:1.2,slip:.04,plan:1}};
 const TEMPERS=['hothead','miser','glory','gambler','steady'];
+/* bot skill: easy bots blunder and ignore plans; hard bots keep their temperament but rarely slip and always chase objectives */
+const SKILL={easy:{nz:2.2,slip:2.5,plan:0,ob:0},normal:{nz:1,slip:1,plan:1,ob:1},hard:{nz:.45,slip:0,plan:1,ob:1.4,mc:36}};
 function botPick(g,p){if(!p.mood)p.mood=TEMPERS[Math.random()*TEMPERS.length|0];
- const M=MOODS[p.mood]||MOODS.steady,i=g.P.indexOf(p),k=EV[g.ev][1],lv=g.nobles.filter(z=>z.n.ev==g.ev);
+ const M0=MOODS[p.mood]||MOODS.steady,SK=p.mood=='cold'?{nz:1,slip:1,plan:0,ob:0}:SKILL[g.cfg.bd]||SKILL.normal;
+ const M=Object.assign({},M0,{nz:M0.nz*SK.nz,slip:Math.min(.35,M0.slip*SK.slip),plan:M0.plan&&SK.plan});
+ const i=g.P.indexOf(p),k=EV[g.ev][1],lv=g.nobles.filter(z=>z.n.ev==g.ev);
  let sv=M.sv,lost=0;for(let j=g.hist.length-1;j>=0&&g.hist[j].win!=i;j--)lost++;
  if(M.slip){if(lost>=3)sv*=.6;else if(g.hist.length&&g.hist[g.hist.length-1].win==i)sv*=1.2}
  let want=1;
  if(M.plan){const hv=cs=>cs.length?g.cfg.hp[best(cs)[0]]:0,d=hv([...p.tr,TRO(g)])-hv(p.tr);
-  want=d>0?1+d/4:(p.tr.length>=5?.6:1);sv/=want}
+  want=d>0?1+d/4:(p.tr.length>=5?.6:1)}
+ /* secret objective: push to win the event it names, and value plays that would complete it */
+ const o=SK.ob&&g.cfg.obon&&p.ob!=null&&!ach(g,OBJ[p.ob],i)?OBJ[p.ob]:null,ov=o?obv(g,p.ob)*SK.ob:0;
+ if(o&&o.k=='ev'&&o.ev==g.ev&&o.ws.includes(g.wave))want*=1+ov/3;
+ sv/=want;
  const later=M.plan?g.nobles.filter(z=>z.n.ev>g.ev):[];
+ /* hard bots estimate what the others might play, using only cards they cannot see */
+ let smp=null;if(SK.mc&&p.mood!='cold'){const ns=g.n>4?5:4,seen=[...p.hand,...g.comm],pool=[];
+  for(let su=0;su<ns;su++)for(let r=2;r<=14;r++)if(!seen.some(c=>c.s==su&&c.r==r))pool.push({s:su,r});
+  const opp=g.P.filter((q,j)=>j!=i&&q.hand.length>=k);smp=[];
+  for(let t=0;t<SK.mc;t++){const d=shuf(pool.slice());let at=0,mx=null;
+   for(const q of opp){const h=d.slice(at,at+Math.min(q.hand.length,8));at+=h.length;if(h.length<k)continue;
+    const ks=combos(h,k).map(c=>handKey(c,g.comm,g.ev)).sort((a,b)=>cmp(b,a)),pk=ks[Math.random()<.55?0:Math.min(ks.length-1,1+(Math.random()*3|0))];
+    if(!mx||cmp(pk,mx)>0)mx=pk}
+   smp.push(mx)}}
  const w=[25,22,15,8,0][g.ev]*sv,all=[];
- for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev);let s=(e[0]*1000+(e[1]||0)*12+(e[2]||0))*(M.plan?Math.min(1.6,want):1)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*M.nz;
+ for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev),str=(e[0]*1000+(e[1]||0)*12+(e[2]||0))*(M.plan?Math.min(1.8,want):1);
+  let s=(smp?str*.1+smp.filter(x=>!x||cmp(e,x)>0).length/smp.length*1200*Math.min(2,want):str)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*M.nz;
   lv.forEach(z=>{const r=nq(z.n,c,g.comm);if(r)s+=(M.plan?420+90*NV(g)[z.sp.indexOf(null)]:250+30*NV(g)[z.sp.indexOf(null)])*M.nb});
   if(later.length){const rest=p.hand.filter(x=>!c.includes(x));
    later.forEach(z=>{const kk=EV[z.n.ev][1];if(rest.length>=kk&&combos(rest,kk).some(cc=>nq(z.n,cc,g.comm)))s+=140*M.nb})}
+  if(o){if(o.k=='hand'&&e[0]==o.cat&&g.ev>0)s+=220*ov;
+   else if(o.k=='kq'&&c.some(x=>x.r==13)&&c.some(x=>x.r==12))s+=220*ov;
+   else if(o.k=='ch5'){if(g.ev==4&&c[0].r<=5)s+=220*ov;else if(g.ev<4&&p.hand.some(x=>x.r<=5&&!c.includes(x)))s+=60*ov}}
   all.push([s,c])}
  all.sort((a,b)=>b[0]-a[0]);
  return (Math.random()<M.slip?all[Math.random()*Math.min(3,all.length)|0]:all[0])[1]}
@@ -111,7 +135,7 @@ function stillPossible(g,o){const fut=(we,ee)=>we>g.wave||(we==g.wave&&ee>g.ev);
 function refillObjectives(g){g.olog=[];if(!g.cfg.obon||!g.cfg.rfl)return;g.P.forEach((p,i)=>{if(p.ob==null||!ach(g,OBJ[p.ob],i)||p.rf>=g.cfg.rfl)return;
  const v=obv(g,p.ob);p.done.push(p.ob);p.ob=null;p.rf++;p.obAt=g.hist.length;
  const held=g.P.flatMap(q=>[q.ob,...q.done]),oc=shuf(g.od.filter(k=>!held.includes(k)&&stillPossible(g,OBJ[k]))).slice(0,g.cfg.od);
- g.od=g.od.filter(k=>!oc.includes(k));p.oc=oc;if(oc.length&&(p.bot||oc.length==1))p.ob=oc[Math.random()*oc.length|0];
+ g.od=g.od.filter(k=>!oc.includes(k));p.oc=oc;if(oc.length&&(p.bot||oc.length==1))p.ob=p.bot?botObj(oc):oc[0];
  g.olog.push(`${p.n} completed a secret objective (+${v})${oc.length?' and draws a new one':''}.`)})}
 /* player i locks in cards [{s,r}]; returns true if accepted */
 function play(g,i,cards){const p=g.P[i];if(!p||p.bot||g.phase!='pick'||!Array.isArray(cards))return false;
