@@ -287,12 +287,16 @@ html,body{background:radial-gradient(ellipse 60% 45% at 8% 0%,rgba(255,150,50,.2
 .pseat.rev .scs{display:flex;justify-content:center;gap:2px;margin-bottom:-4px;position:relative;z-index:1}.pseat.rev .scs .c{--cw:30px;box-shadow:0 3px 6px rgba(0,0,0,.55)}.tbl.k4 .pseat.rev .scs .c{--cw:26px}
 .pseat.rev.win .scs{filter:drop-shadow(0 0 8px #ffd24a)}
 /* reveal pop-ups: big WINNER and noble crown that appear next to the player, then fade */
-.rpop{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);animation:rpop 2.6s ease both}
-.rpop.win{font:400 30px/1 "IM Fell English SC",Georgia,serif;letter-spacing:3px;text-transform:uppercase;color:#2a1d07;padding:10px 34px 12px;background:linear-gradient(#fff3c0,#f0c95a 45%,#c48f22);clip-path:polygon(0 0,100% 0,90% 50%,100% 100%,0 100%,10% 50%);white-space:nowrap}
-.rpop.win i{font-style:normal;margin-right:8px}
+.rpop{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);animation:rpop 3.2s ease both}
+.rpop.win{display:flex;flex-direction:column;align-items:center}
+.rpop.win .rib{font:400 30px/1 "IM Fell English SC",Georgia,serif;letter-spacing:3px;text-transform:uppercase;color:#2a1d07;padding:10px 34px 12px;background:linear-gradient(#fff3c0,#f0c95a 45%,#c48f22);clip-path:polygon(0 0,100% 0,90% 50%,100% 100%,0 100%,10% 50%);white-space:nowrap;position:relative;z-index:1}
+.rpop.win .rib i{font-style:normal;margin-right:8px}
+.rpop.win .rwc{margin-top:-4px;padding:12px 16px 9px;background:rgba(20,13,8,.92);border:2px solid #e3b43f;border-radius:12px;box-shadow:0 0 24px rgba(255,210,74,.5),0 8px 16px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;gap:7px}
+.rpop.win .rcs{display:flex;gap:6px}.rpop.win .rcs .c{--cw:64px;box-shadow:0 4px 8px rgba(0,0,0,.6)}
+.rpop.win .rwc b{font:700 17px/1.2 system-ui,sans-serif;color:#ffe08a;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis}
 .rpop.crn{width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff6cf,#f0c95a 55%,#a77b1c);border:3px solid #fff3c4;box-shadow:0 0 30px 6px rgba(255,210,74,.85),0 6px 12px rgba(0,0,0,.6);font-size:56px;line-height:86px;text-align:center;animation-delay:.5s}
 .rpop.crn b{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);font:800 18px/1 system-ui,sans-serif;color:#2a1d07;background:#fff3c4;border:2px solid #a77b1c;border-radius:12px;padding:3px 9px;white-space:nowrap}
-.rshade{position:fixed;inset:0;z-index:59;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 30%,rgba(0,0,0,.45));animation:rshade 2.6s ease both}
+.rshade{position:fixed;inset:0;z-index:59;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 30%,rgba(0,0,0,.45));animation:rshade 3.2s ease both}
 @keyframes rpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}20%{transform:translate(-50%,-50%) scale(1)}78%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) scale(.9)}}
 @keyframes rshade{0%,100%{opacity:0}15%,75%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.rpop{animation:rfade 2.6s both}.rpop.crn{animation-delay:.5s}@keyframes rfade{0%,100%{opacity:0}10%,80%{opacity:1}}}
@@ -394,9 +398,9 @@ function revealPops(){if(!G||G.phase!='show')return;const key=G.wave+'-'+G.ev+'-
   document.querySelectorAll('.rpop,.rshade').forEach(e=>e.remove());
   const at=i=>{const e=document.querySelector(`[data-p="${i}"]`);if(!e)return null;const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2,r}};
   const add=(cls,html,x,y)=>{const d=document.createElement('div');d.className='rpop '+cls;d.innerHTML=html;
-    d.style.left=Math.max(70,Math.min(innerWidth-70,x))+'px';d.style.top=Math.max(50,Math.min(innerHeight-50,y))+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),3300)};
-  const sh=document.createElement('div');sh.className='rshade';document.body.appendChild(sh);setTimeout(()=>sh.remove(),3300);
-  const w=at(G.win);if(w)add('win',`<i>🏆</i>${G.win==G.me?'You win!':'Winner'}`,w.x,w.y);
+    d.style.left=Math.max(110,Math.min(innerWidth-110,x))+'px';d.style.top=Math.max(cls=='win'?100:60,Math.min(innerHeight-(cls=='win'?100:60),y))+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),4000)};
+  const sh=document.createElement('div');sh.className='rshade';document.body.appendChild(sh);setTimeout(()=>sh.remove(),4000);
+  const w=at(G.win);if(w){const P=G.P[G.win],hd=handDesc(P.pl,G.ks[G.win],G.ev);add('win',`<div class="rib"><i>🏆</i>${G.win==G.me?'You win!':'Winner'}</div><div class="rwc"><div class="rcs">${P.pl.map(c=>cd(c)).join('')}</div><b>${G.win==G.me?'':esc(P.n)+': '}${hd.charAt(0).toUpperCase()+hd.slice(1)}</b></div>`,w.x,w.y)}
   const by={};(G.ncl||[]).forEach(c=>by[c.p]=(by[c.p]||0)+c.v);
   Object.keys(by).forEach(p=>{const a=at(+p);if(!a)return;const same=+p==G.win;add('crn',`👑<b>${+p==G.me?'You':esc(G.P[p].n)} +${by[p]}</b>`,a.x+(same?(a.x<innerWidth/2?90:-90):0),a.y+(same?40:0))})}
 function render(){const app=document.getElementById('app');
