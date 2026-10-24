@@ -1,11 +1,14 @@
-// HUZZAH! online server: serves the game page and runs game rooms over WebSocket.
+// HUZZAH! online server: serves the game pages (HUZZAH! at /, SQUIRE at /squire/) and runs game rooms over WebSocket.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const crypto = require('crypto');
 const { WebSocketServer } = require('./miniws.js');
-const HZ = require('./public/engine.js');
+const ENGINES = { huzzah: require('./public/engine.js'), squire: require('./public/squire/engine.js') };
+const HZ = ENGINES.huzzah;
+const E = room => ENGINES[room.game] || HZ; // each room runs its own game's rules
+const gameOf = m => (m.game === 'squire' ? 'squire' : 'huzzah');
 
 const PORT = process.env.PORT || 3000;
 const PUB = path.join(__dirname, 'public');
@@ -26,7 +29,9 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   if (url.pathname === '/healthz') { res.writeHead(200); return res.end('ok'); }
   let rel = decodeURIComponent(url.pathname);
+  if (rel === '/squire') { res.writeHead(301, { Location: '/squire/' + url.search }); return res.end(); }
   if (rel === '/' || rel === '') rel = '/index.html';
+  else if (rel.endsWith('/')) rel += 'index.html';
   const f = getFile(rel);
   if (!f) { res.writeHead(404); return res.end('Not found'); }
   const gz = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
@@ -53,13 +58,15 @@ function applyCfg(cfg, c) {
   if ([0, 1, 2, 3].includes(c.od)) cfg.od = c.od;
   if ([0, 1, 99].includes(c.rfl)) cfg.rfl = c.rfl;
   if (['easy', 'normal', 'hard'].includes(c.bd)) cfg.bd = c.bd;
+  if (c.brd === 'a' || c.brd === 'b') cfg.brd = c.brd; // SQUIRE scorecard
   if (c.sm === 'pts' || c.sm === 'hand') cfg.sm = c.sm;
   if (Array.isArray(c.hp) && c.hp.length === 10) cfg.hp = c.hp.map(x => Math.max(0, Math.min(99, x | 0)));
   if (Array.isArray(c.obv) && c.obv.length === HZ.OBJ.length) cfg.obv = c.obv.map(x => Math.max(0, Math.min(99, x | 0)));
   cfg.obon = cfg.od > 0;
 }
-function makeRoom(hostName) {
-  const room = { code: newCode(), size: 4, cfg: HZ.defaultCfg(), seats: [], g: null, touched: Date.now() };
+function makeRoom(hostName, game) {
+  game = game || 'huzzah';
+  const room = { code: newCode(), game, size: 4, cfg: ENGINES[game].defaultCfg(), seats: [], g: null, touched: Date.now() };
   rooms.set(room.code, room);
   addSeat(room, hostName);
   return room;
@@ -85,7 +92,7 @@ function send(ws, msg) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m
 function broadcast(room) {
   room.touched = Date.now();
   room.seats.forEach((s, i) => {
-    if (s.ws) send(s.ws, { t: 'state', room: roomInfo(room, i), g: room.g ? HZ.view(room.g, i) : null });
+    if (s.ws) send(s.ws, { t: 'state', room: roomInfo(room, i), g: room.g ? E(room).view(room.g, i) : null });
   });
 }
 function startGame(room) {
@@ -95,18 +102,18 @@ function startGame(room) {
     let nm; do { nm = 'Bot ' + (b++); } while (room.seats.some(s => s.name === nm));
     room.seats.push({ token: newToken(), name: nm, bot: true, ws: null });
   }
-  room.g = HZ.newGame(room.seats.map(s => ({ name: s.name, bot: s.bot })), room.cfg);
+  room.g = E(room).newGame(room.seats.map(s => ({ name: s.name, bot: s.bot })), room.cfg);
 }
 function maybeReveal(room) {
   const g = room.g;
-  if (g && HZ.allIn(g)) HZ.reveal(g);
+  if (g && E(room).allIn(g)) E(room).reveal(g);
 }
 function maybeAdvance(room) {
   const g = room.g;
   if (!g || g.phase !== 'show') return;
   // advance when every connected human has pressed Continue (at least one)
   const live = room.seats.map((s, i) => i).filter(i => !room.seats[i].bot && room.seats[i].ws && room.seats[i].ws.readyState === 1);
-  if (live.length && live.every(i => g.P[i].cont)) HZ.nxt(g);
+  if (live.length && live.every(i => g.P[i].cont)) E(room).nxt(g);
 }
 
 /* ---------- websocket protocol ---------- */
@@ -127,9 +134,9 @@ wss.on('connection', ws => {
     const room = ws.room, i = ws.seat;
     const isHost = room && i === hostSeat(room);
     switch (m.t) {
-      case 'create': { const r = makeRoom(clean(m.name, 'Host')); return bind(r, 0); }
+      case 'create': { const r = makeRoom(clean(m.name, 'Host'), gameOf(m)); return bind(r, 0); }
       case 'solo': {
-        const r = makeRoom(clean(m.name, 'You'));
+        const r = makeRoom(clean(m.name, 'You'), gameOf(m));
         r.size = Math.max(2, Math.min(6, m.size | 0 || 4));
         applyCfg(r.cfg, m.cfg);
         startGame(r); return bind(r, 0);
@@ -137,6 +144,7 @@ wss.on('connection', ws => {
       case 'join': {
         const r = rooms.get(String(m.code || '').toUpperCase().trim());
         if (!r) return err('No game with that code. Check the code with your host.');
+        if (r.game !== gameOf(m)) return err(r.game === 'squire' ? 'That code is for a SQUIRE game. Open SQUIRE to join it.' : 'That code is for a HUZZAH! game. Open HUZZAH! to join it.');
         if (r.g) return err('That game has already started.');
         if (r.seats.length >= r.size) return err('That table is full.');
         const s = addSeat(r, clean(m.name, 'Player'));
@@ -144,7 +152,7 @@ wss.on('connection', ws => {
       }
       case 'rejoin': {
         const r = rooms.get(String(m.code || '').toUpperCase());
-        const idx = r ? r.seats.findIndex(s => s.token === m.token && !s.bot) : -1;
+        const idx = r && r.game === gameOf(m) ? r.seats.findIndex(s => s.token === m.token && !s.bot) : -1;
         if (idx < 0) return send(ws, { t: 'gone' });
         return bind(r, idx);
       }
@@ -174,17 +182,21 @@ wss.on('connection', ws => {
         startGame(room);
         break;
       case 'obj':
-        if (!g || !HZ.pickObj(g, i, m.k)) return;
+        if (!g || !E(room).pickObj(g, i, m.k)) return;
         break;
       case 'play':
-        if (!g || !HZ.play(g, i, m.cards)) return err('Those cards can’t be played right now.');
+        if (!g || !E(room).play(g, i, m.cards)) return err('Those cards can’t be played right now.');
         maybeReveal(room);
         break;
       case 'unplay':
-        if (!g || !HZ.unplay(g, i)) return;
+        if (!g || !E(room).unplay(g, i)) return;
+        break;
+      case 'place': // SQUIRE: put an earned trophy, crown or boon on your scorecard
+        if (!g || !E(room).place || !E(room).place(g, i, m.col | 0)) return err('That piece can’t go there.');
         break;
       case 'cont':
         if (!g || g.phase !== 'show') return;
+        if (g.P[i].pd && g.P[i].pd.length) return err('Place your pieces on your board first.');
         g.P[i].cont = true;
         maybeAdvance(room);
         break;
@@ -199,7 +211,7 @@ wss.on('connection', ws => {
       }
       case 'again':
         if (!isHost || !g || g.phase !== 'end') return;
-        room.g = HZ.newGame(room.seats.map(s => ({ name: s.name, bot: s.bot })), room.cfg);
+        room.g = E(room).newGame(room.seats.map(s => ({ name: s.name, bot: s.bot })), room.cfg);
         break;
       case 'lobby': // host returns everyone to the lobby after a game
         if (!isHost || !g || g.phase !== 'end') return;

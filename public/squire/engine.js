@@ -1,0 +1,224 @@
+/* SQUIRE game engine — shared by the server (authoritative) and the browser (display helpers).
+   Built from HUZZAH!: same events and cards; trophies, crowns and boons go on each player's scorecard board. */
+(function (root) {
+const SU=['♠','♥','♦','♣','✦'],COL=['#6f9be8','#9b6bff','#ff4a4a','#8fff00','#ffe600'],RK=[0,0,2,3,4,5,6,7,8,9,10,'J','Q','K','A'];
+const EV=[['Archery',2,0],['Sword Fight',2,3],['Joust',2,4],['Grand Melee',2,5],['Champion',1,5]],TR=[10,11,12,13,14];
+const HN=['High card','Pair','Two pair','Three of a kind','Straight','Flush','Full house','Four of a kind','Straight flush','Royal flush'];
+/* trophies are only 10 to A, so a straight (one trophy from every event) is harder than a full house and scores more;
+   a plain flush or straight flush can't happen (five trophies of one suit are a royal flush) */
+const HP0=[0,2,4,8,12,10,10,14,16,18];
+const NOB=[
+{id:'j-arch',name:'The Jester',ev:0,kind:'lowpair',h:[3,0,2,1,4],txt:'Lowest pair'},
+{id:'c-sf',name:'The Countess',ev:1,kind:'gap',h:[2,1,4,3,0],txt:'Biggest gap between your 2 cards'},
+{id:'d-sf',name:'The Duke',ev:1,kind:'sum10',h:[2,0,3,4,1],txt:'Two number cards adding to 10 (highest card wins)'},
+{id:'p-sf',name:'The Princess',ev:1,kind:'str3',h:[4,1,2,0,3],txt:'Best 3-card straight (use 1 or 2 pocket cards)'},
+{id:'b-jo',name:'The Baron',ev:2,kind:'suit',suit:0,h:[0,2,1,4,3],txt:'Highest Spade'},
+{id:'p-jo',name:'The Princess',ev:2,kind:'consec',h:[1,2,0,3,4],txt:'Highest consecutive pair'},
+{id:'d-gm',name:'The Duke',ev:3,kind:'consec',h:[0,3,4,1,2],txt:'Highest consecutive pair'},
+{id:'c-gm',name:'The Countess',ev:3,kind:'lowpair',h:[3,4,1,2,0],txt:'Lowest pair'},
+{id:'b-ch',name:'The Baron',ev:4,kind:'suit',suit:1,h:[1,4,3,0,2],txt:'Highest Heart'},
+{id:'j-ch',name:'The Jester',ev:4,kind:'lowdia',h:[4,3,0,2,1],txt:'Lowest Diamond'}];
+const OBJ=[{id:'ch5',t:'Win Champion with a 5 or lower',k:'ch5',v:5},{id:'flush',t:'Win with a flush',k:'hand',cat:5,v:3},{id:'gm13',t:'Win day 1 or 3 Grand Melee',k:'ev',ev:3,ws:[0,2],v:2},{id:'fh',t:'Win with a full house',k:'hand',cat:6,v:3},{id:'ch24',t:'Win day 2 or 4 Champion',k:'ev',ev:4,ws:[1,3],v:2},{id:'kq',t:'Win with a king and queen from your pocket',k:'kq',v:5},{id:'trips',t:'Win with 3 of a kind',k:'hand',cat:3,v:2},{id:'ch13',t:'Win day 1 or 3 Champion',k:'ev',ev:4,ws:[0,2],v:2},{id:'jo24',t:'Win day 2 or 4 Joust',k:'ev',ev:2,ws:[1,3],v:2},{id:'ar24',t:'Win day 2 or 4 Archery',k:'ev',ev:0,ws:[1,3],v:2},{id:'jo13',t:'Win day 1 or 3 Joust',k:'ev',ev:2,ws:[0,2],v:2},{id:'sf24',t:'Win day 2 or 4 Sword Fight',k:'ev',ev:1,ws:[1,3],v:2},{id:'str',t:'Win with a straight',k:'hand',cat:4,v:2},{id:'gm24',t:'Win day 2 or 4 Grand Melee',k:'ev',ev:3,ws:[1,3],v:2},{id:'sf13',t:'Win day 1 or 3 Sword Fight',k:'ev',ev:1,ws:[0,2],v:2},{id:'ar13',t:'Win day 1 or 3 Archery',k:'ev',ev:0,ws:[0,2],v:2}];
+/* nn: nobles in play (0-3); od: objectives dealt per player (0 = off); rfl: objective refills (0 off, 1 once, 99 unlimited) */
+const defaultCfg=()=>({nord:'desc',obon:true,sm:'pts',hp:HP0.slice(),obv:OBJ.map(o=>o.v),nn:1,od:2,rfl:0,bd:'normal',brd:'a'});
+/* ---------- the scorecard board ----------
+   6 columns (banners), each a bottom box plus 3 rows. A column belongs to the first trophy type placed in it.
+   Types: 0-4 the five events, 5 the noble's crown. Pieces: 'T' trophy, 'B' boon. */
+const CROWN=5,TNAME=['Archery','Sword Fight','Joust','Grand Melee','Champion','Crown'];
+const VALS={a:[[1,2,3],[2,3,5],[3,4,7],[4,5,9],[5,7,12],[7,9,16]],b:[[1,2,4],[2,3,6],[3,4,8],[4,5,10],[5,7,14],[7,9,18]]};
+const DIV=[0,0,1,2,3,5,7];
+/* what earns a boon when you lose the event: at Archery any pair (a gamble: that pair could have become three of a kind later); two pair or better at the
+   Sword Fight, Joust and Grand Melee; a pair at Champion (your card matches the table) */
+const MINH=[1,2,2,2,1];
+const boonOK=(k,ev)=>k[0]>=MINH[ev];
+/* the trophy a completed secret objective gives: the event it names, Champion for the low-card one, otherwise the event where it was done */
+const obTrophy=(o,ev)=>o.k=='ev'?o.ev:o.k=='ch5'?4:ev;
+/* where a piece can go: column index, or bd.length for the next empty bottom box */
+function legal(p,pc){const bd=p.bd||[],out=[],nw=bd.length<6?[bd.length]:[];
+ if(pc.k=='T'){const ci=bd.findIndex(c=>c.t===pc.t);if(ci>=0)return bd[ci].s.length<4?[ci]:[];
+  bd.forEach((c,j)=>{if(c.t==null&&c.s.length<4)out.push(j)});return nw.concat(out)}
+ bd.forEach((c,j)=>{if(c.s.length<4)out.push(j)});return nw.concat(out)}
+function colPts(g,c,j){if(c.t==null)return 0;const h=c.s.lastIndexOf('T');return h>=1?VALS[g.cfg.brd=='b'?'b':'a'][j][h-1]:0}
+function sqParts(g,i){const p=g.P[i],bd=p.bd||[],types=bd.filter(c=>c.t!=null).length;
+ return {base:(p.tr||[]).length+(p.cr||0)+(p.xt||0),cols:bd.reduce((a,c,j)=>a+colPts(g,c,j),0),div:DIV[types]}}
+const sqScore=(g,i)=>{const x=sqParts(g,i);return x.base+x.cols+x.div};
+
+/* ---------- pure helpers ---------- */
+const srt=(a,b)=>a.r-b.r||a.s-b.s;
+const same=(a,b)=>a.s==b.s&&a.r==b.r;
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+const cmp=(a,b)=>{for(let i=0;i<Math.max(a.length,b.length);i++){const d=(a[i]||0)-(b[i]||0);if(d)return d}return 0};
+function combos(a,k,s=0,cur=[],out=[]){if(cur.length==k){out.push(cur.slice());return out}for(let i=s;i<a.length;i++){cur.push(a[i]);combos(a,k,i+1,cur,out);cur.pop()}return out}
+const perm=a=>a.length<2?[a]:a.flatMap((x,i)=>perm(a.filter((_,j)=>j!=i)).map(q=>[x,...q]));
+function eN(c){const n=c.length,r=c.map(x=>x.r).sort((a,b)=>b-a),fl=n==5&&c.every(x=>x.s==c[0].s);let hi=r[0],st=n==5&&r.every((v,i)=>!i||r[i-1]-v==1);
+ if(n==5&&!st&&r.join()=='14,5,4,3,2'){st=true;hi=5}
+ const m={};r.forEach(v=>m[v]=(m[v]||0)+1);const g=Object.entries(m).map(([v,k])=>[k,+v]).sort((a,b)=>b[0]-a[0]||b[1]-a[1]),sh=g.map(x=>x[0]).join(''),rr=g.map(x=>x[1]);
+ const cat=st&&fl?(hi==14?9:8):sh[0]=='4'?7:sh=='32'?6:fl?5:st?4:sh[0]=='3'?3:sh.slice(0,2)=='22'?2:sh[0]=='2'?1:0;
+ return [cat,...(st?[hi]:rr)]}
+const best=c=>c.length<=5?eN(c):combos(c,5).map(eN).sort((a,b)=>cmp(b,a))[0];
+const bestCards=c=>c.length<=5?c:combos(c,5).sort((a,b)=>cmp(eN(b),eN(a)))[0];
+const tie=(c,h)=>c.slice().sort((a,b)=>b.r-a.r||h.indexOf(a.s)-h.indexOf(b.s)).map(x=>h.length-h.indexOf(x.s));
+/* Champion: only matches with your own card count (a pair already on the board doesn't help anyone) */
+const champ=(c,cm)=>{const n=cm.filter(x=>x.r==c.r).length;return [[0,1,3,7][Math.min(n,3)],c.r]};
+const handKey=(pl,cm,ev)=>ev==4&&pl.length==1?champ(pl[0],cm):best(pl.concat(cm));
+const key=(pl,cm,h,ev)=>handKey(pl,cm,ev).concat(tie(pl,h));
+const hname=(k,ev)=>ev==0?['High card','Pair'][k[0]]:HN[k[0]];
+const tk=tie;
+function nq(nb,pk,cm){const a=pk[0],b=pk[1],two=pk.length==2;
+ if(nb.kind=='lowpair')return two&&a.r==b.r?{k:[-a.r],c:pk}:null;
+ if(nb.kind=='gap')return two?{k:[Math.abs(a.r-b.r)],c:pk}:null;
+ if(nb.kind=='sum10')return two&&a.r<=10&&b.r<=10&&a.r+b.r==10?{k:[Math.max(a.r,b.r)],c:pk}:null;
+ if(nb.kind=='consec')return two&&Math.abs(a.r-b.r)==1?{k:[Math.max(a.r,b.r)],c:pk}:null;
+ if(nb.kind=='lowdia'){const d=pk.filter(c=>c.s==2).sort((x,y)=>x.r-y.r);return d.length?{k:[-d[0].r],c:[d[0]]}:null}
+ if(nb.kind=='suit'){const d=pk.filter(c=>c.s==nb.suit).sort((x,y)=>y.r-x.r);return d.length?{k:[d[0].r],c:[d[0]]}:null}
+ if(nb.kind=='str3'){const all=pk.concat(cm),R=r=>r==1?14:r,has=r=>all.some(c=>c.r==R(r)),ph=r=>pk.some(c=>c.r==R(r));
+  for(let t=14;t>=3;t--)if(has(t)&&has(t-1)&&has(t-2)&&(ph(t)||ph(t-1)||ph(t-2)))return{k:[t],c:[t,t-1,t-2].map(r=>pk.find(c=>c.r==R(r))||cm.find(c=>c.r==R(r)))};
+  return null}
+ return null}
+const nkey=(nb,r)=>r.k.concat(tk(r.c,nb.h));
+
+/* ---------- state-dependent helpers (work on server state and on a player's view) ---------- */
+const NV=g=>g.cfg.nord=='asc'?[2,3]:[3,2];
+const TRO=g=>g.trs[Math.min(19,g.wave*5+g.ev)];
+/* SQUIRE: event ties use the suit order printed on the day's noble (best to worst); Yellow only counts with 5-6 players */
+const tieOrder=g=>{const z=g.nobles&&g.nobles[0];return z?z.n.h.filter(s=>g.n>4||s!=4):TRO(g).h};
+const npts=(g,i)=>g.cl.filter(c=>c.p==i).reduce((a,c)=>a+NV(g)[c.i],0);
+const hpts=(g,p)=>p.tr.length?g.cfg.hp[best(p.tr)[0]]:0;
+const ach=(g,o,i,from)=>g.hist.slice(from==null?(g.P[i].obAt||0):from).some(x=>x.win==i&&(o.k=='ev'?x.e==o.ev&&o.ws.includes(x.w):o.k=='hand'?x.cat==o.cat:o.k=='ch5'?x.e==4&&x.pl[0].r<=5:o.k=='kq'?x.pl.some(c=>c.r==13)&&x.pl.some(c=>c.r==12):o.k=='arch0'?x.e==0&&x.cat==0:false));
+const obv=(g,ob)=>g.cfg.obv[ob]!=null?g.cfg.obv[ob]:OBJ[ob].v;
+const obp=(g,i)=>{const p=g.P[i];if(!g.cfg.obon)return 0;return (p.done||[]).reduce((a,o)=>a+obv(g,o),0)+(p.ob!=null&&ach(g,OBJ[p.ob],i)?obv(g,p.ob):0)};
+/* player still has to choose an objective before playing */
+const needOb=(g,p)=>!!(g.cfg.obon&&p.ob==null&&p.oc&&p.oc.length);
+function ranking(g){const fk=i=>[sqScore(g,i),sqParts(g,i).base,sqParts(g,i).cols];
+ return g.P.map((p,i)=>({p,i,k:fk(i)})).sort((a,b)=>cmp(b.k,a.k))}
+
+function putPiece(p,pc,j){if(!p.bd)p.bd=[];if(j==p.bd.length)p.bd.push({t:null,s:[]});const c=p.bd[j];c.s.push(pc.k);if(pc.k=='T'&&c.t==null)c.t=pc.t}
+const cloneP=p=>Object.assign({},p,{bd:(p.bd||[]).map(c=>({t:c.t,s:c.s.slice()}))});
+const scoreWith=(g,i,q)=>sqScore({cfg:g.cfg,P:g.P.map((x,k)=>k==i?q:x),hist:g.hist},i);
+/* best score gain from placing a trophy of type t now (bots use this to decide what is worth winning) */
+function gainT(g,i,t){const p=g.P[i],now=sqScore(g,i);let b=1;
+ legal(p,{k:'T',t}).forEach(j=>{const q=cloneP(p);putPiece(q,{k:'T',t},j);b=Math.max(b,scoreWith(g,i,q)-now+1)});return b}
+/* bot placement: trophies where they score most; boons on columns they hope to win again */
+function botPlace(g,i){const p=g.P[i];
+ while(p.pd&&p.pd.length){const pc=p.pd[0],o=legal(p,pc);if(!o.length){p.pd.shift();continue}let bj=o[0],bs=-1e9;
+  for(const j of o){let v;
+   if(pc.k=='T'){const q=cloneP(p);putPiece(q,pc,j);v=scoreWith(g,i,q)+(j==(p.bd||[]).length?.01*(6-j):0)}
+   else{const c=(p.bd||[])[j];v=!c?.4:c.t==null?-.5:c.s.length<=2?c.s.length+j*.2+(c.t==CROWN?.3:0):-3}
+   if(v>bs){bs=v;bj=j}}
+  putPiece(p,pc,bj);p.pd.shift()}}
+function place(g,i,col){const p=g.P[i];if(!p||!p.pd||!p.pd.length||g.phase!='show')return false;
+ if(!legal(p,p.pd[0]).includes(col))return false;putPiece(p,p.pd[0],col);p.pd.shift();
+ while(p.pd.length&&!legal(p,p.pd[0]).length)p.pd.shift();return true}
+
+/* ---------- authoritative game flow (server) ---------- */
+function drawNoble(g,ex){const act=g.nobles.map(z=>z.n.id),ok=n=>!ex.some(o=>o.ev==n.ev||o.kind==n.kind);if(!g.nd.length)g.nd=shuf(NOB.filter(n=>!act.includes(n.id)));let i=g.nd.findIndex(ok);if(i<0){g.nd=shuf(NOB.filter(n=>!act.includes(n.id)));i=g.nd.findIndex(ok);if(i<0)i=0}return g.nd.splice(i,1)[0]}
+function begin(g){while(g.comm.length<EV[g.ev][2])g.comm.push(g.deck.pop())}
+function deal(g){const kept=g.P.map(p=>p.hand.slice()),kc=[].concat(...kept),d=[];
+ for(let s=0;s<(g.n>4?5:4);s++)for(let r=2;r<=14;r++)if(!kc.some(c=>c.s==s&&c.r==r))d.push({s,r});shuf(d);
+ g.P.forEach((p,i)=>{p.hand=kept[i].concat(d.splice(0,10-kept[i].length)).sort(srt);p.pl=[];p.sel=null});g.deck=d;g.comm=[];
+ /* a new noble (the favor banner) comes out each day */
+ g.nobles=[];for(let k=0;k<(g.cfg.nn||0);k++)g.nobles.push({n:drawNoble(g,g.nobles.map(z=>z.n)),sp:[null]});
+ begin(g)}
+/* bots keep the objective that is easiest to finish: event wins first, then the higher reward */
+const OBE={ev:3,hand:1,kq:1,ch5:2};
+function botObj(oc){return oc.slice().sort((a,b)=>(OBE[OBJ[b].k]||0)*2+OBJ[b].v*.5-(OBE[OBJ[a].k]||0)*2-OBJ[a].v*.5+Math.random()-.5)[0]}
+function newGame(players,cfg){const n=players.length;cfg=Object.assign(defaultCfg(),cfg||{});cfg.obon=cfg.od>0;
+ const trs=new Array(20),HS=[0,1,2,3].map(s=>shuf(perm([0,1,2,3,4].slice(0,n>4?5:4).filter(x=>x!=s))).slice(0,5));
+ TR.forEach((r,i)=>{const ws=shuf([0,1,2,3]);for(let w=0;w<4;w++){const s=ws[w];trs[w*5+i]={s,r,h:[s,...HS[s][i]]}}});
+ const g={n,cfg,P:players.map(x=>({n:x.name,bot:!!x.bot,hand:[],tr:[],pl:[],sel:null,cont:false,oc:[],ob:null,done:[],rf:0,obAt:0,bd:[],pd:[],cr:0,bn:0,xt:0,gt:[],obGot:false})),trs,wave:0,ev:0,phase:'pick',gain:[],nd:shuf(NOB.slice()),nobles:[],cl:[],nlog:[],olog:[],hist:[],ks:null,win:null};
+ const od=shuf(OBJ.map((_,i)=>i));g.od=od;
+ if(cfg.obon)g.P.forEach(p=>{for(let k=0;k<cfg.od;k++)p.oc.push(od.length?od.pop():Math.random()*OBJ.length|0);p.ob=p.bot?botObj(p.oc):cfg.od==1?p.oc[0]:null});
+ deal(g);return g}
+/* bots play like people: each has a temperament, gets tilted by losing streaks, cocky after a win, and sometimes goes with a gut call */
+/* bots play like people: each has a temperament, gets tilted by losing streaks, cocky after a win, and sometimes goes with a gut call.
+   They also plan: they spend good cards on trophies that build their final poker hand, chase the nobles at this event,
+   and hold on to cards that qualify for nobles coming later in the wave. */
+const MOODS={cold:{sv:1,nz:150,nb:1,slip:0,plan:0},hothead:{sv:.55,nz:260,nb:1,slip:.08,plan:1},miser:{sv:1.5,nz:260,nb:1,slip:.06,plan:1},glory:{sv:.9,nz:260,nb:1.8,slip:.06,plan:1},gambler:{sv:.85,nz:480,nb:1.2,slip:.12,plan:1},steady:{sv:1,nz:220,nb:1.2,slip:.04,plan:1}};
+const TEMPERS=['hothead','miser','glory','gambler','steady'];
+/* bot skill: easy bots blunder and ignore plans; hard bots keep their temperament but rarely slip and always chase objectives */
+const SKILL={easy:{nz:2.2,slip:2.5,plan:0,ob:0},normal:{nz:1,slip:1,plan:1,ob:1},hard:{nz:.45,slip:0,plan:1,ob:1.4,mc:36}};
+function botPick(g,p){if(!p.mood)p.mood=TEMPERS[Math.random()*TEMPERS.length|0];
+ const M0=MOODS[p.mood]||MOODS.steady,SK=p.mood=='cold'?{nz:1,slip:1,plan:0,ob:0}:SKILL[g.cfg.bd]||SKILL.normal;
+ const M=Object.assign({},M0,{nz:M0.nz*SK.nz,slip:Math.min(.35,M0.slip*SK.slip),plan:M0.plan&&SK.plan});
+ const i=g.P.indexOf(p),k=EV[g.ev][1],lv=g.nobles.filter(z=>z.n.ev==g.ev);
+ let sv=M.sv,lost=0;for(let j=g.hist.length-1;j>=0&&g.hist[j].win!=i;j--)lost++;
+ if(M.slip){if(lost>=3)sv*=.6;else if(g.hist.length&&g.hist[g.hist.length-1].win==i)sv*=1.2}
+ let want=1;
+ if(M.plan){const d=gainT(g,i,g.ev);want=Math.min(3,.6+d/4)}
+ /* secret objective: push to win the event it names, and value plays that would complete it */
+ const o=SK.ob&&g.cfg.obon&&p.ob!=null&&!ach(g,OBJ[p.ob],i)?OBJ[p.ob]:null,ov=o?obv(g,p.ob)*SK.ob:0;
+ if(o&&o.k=='ev'&&o.ev==g.ev&&o.ws.includes(g.wave))want*=1+ov/3;
+ sv/=want;
+ const later=M.plan?g.nobles.filter(z=>z.n.ev>g.ev):[];
+ /* hard bots estimate what the others might play, using only cards they cannot see */
+ let smp=null;if(SK.mc&&p.mood!='cold'){const ns=g.n>4?5:4,seen=[...p.hand,...g.comm],pool=[];
+  for(let su=0;su<ns;su++)for(let r=2;r<=14;r++)if(!seen.some(c=>c.s==su&&c.r==r))pool.push({s:su,r});
+  const opp=g.P.filter((q,j)=>j!=i&&q.hand.length>=k);smp=[];
+  for(let t=0;t<SK.mc;t++){const d=shuf(pool.slice());let at=0,mx=null;
+   for(const q of opp){const h=d.slice(at,at+Math.min(q.hand.length,8));at+=h.length;if(h.length<k)continue;
+    const ks=combos(h,k).map(c=>handKey(c,g.comm,g.ev)).sort((a,b)=>cmp(b,a)),pk=ks[Math.random()<.55?0:Math.min(ks.length-1,1+(Math.random()*3|0))];
+    if(!mx||cmp(pk,mx)>0)mx=pk}
+   smp.push(mx)}}
+ const w=[25,22,15,8,0][g.ev]*sv,all=[],crownG=lv.length?gainT(g,i,CROWN):0;
+ for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev),str=(e[0]*1000+(e[1]||0)*12+(e[2]||0))*(M.plan?Math.min(1.8,want):1);
+  let s=(smp?str*.1+smp.filter(x=>!x||cmp(e,x)>0).length/smp.length*1200*Math.min(2,want):str)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*M.nz;
+  lv.forEach(z=>{if(z.sp[0]!=null)return;const r=nq(z.n,c,g.comm);if(r)s+=(M.plan?300+110*crownG:250+60*crownG)*M.nb});
+  if(M.plan&&boonOK(e,g.ev,c))s+=120;
+  if(later.length){const rest=p.hand.filter(x=>!c.includes(x));
+   later.forEach(z=>{const kk=EV[z.n.ev][1];if(rest.length>=kk&&combos(rest,kk).some(cc=>nq(z.n,cc,g.comm)))s+=140*M.nb})}
+  if(o){if(o.k=='hand'&&e[0]==o.cat&&g.ev>0)s+=220*ov;
+   else if(o.k=='kq'&&c.some(x=>x.r==13)&&c.some(x=>x.r==12))s+=220*ov;
+   else if(o.k=='ch5'){if(g.ev==4&&c[0].r<=5)s+=220*ov;else if(g.ev<4&&p.hand.some(x=>x.r<=5&&!c.includes(x)))s+=60*ov}}
+  all.push([s,c])}
+ all.sort((a,b)=>b[0]-a[0]);
+ return (Math.random()<M.slip?all[Math.random()*Math.min(3,all.length)|0]:all[0])[1]}
+/* player i picks objective k from their dealt options; can switch until the first reveal, and picks once after a refill */
+function pickObj(g,i,k){const p=g.P[i];if(!p||p.bot||g.phase=='end'||!Number.isInteger(k)||k<0||k>=p.oc.length)return false;if((g.hist.length||p.rf)&&p.ob!=null)return false;p.ob=p.oc[k];return true}
+/* could objective o still be completed in a future event? */
+function stillPossible(g,o){const fut=(we,ee)=>we>g.wave||(we==g.wave&&ee>g.ev);if(g.wave==3&&g.ev==4)return false;if(o.k=='ev')return o.ws.some(x=>fut(x,o.ev));if(o.k=='ch5')return [0,1,2,3].some(x=>fut(x,4));return true}
+/* refill variant: a completed objective scores and the player draws new options */
+function refillObjectives(g){if(!g.cfg.obon||!g.cfg.rfl)return;g.P.forEach((p,i)=>{if(p.ob==null||!ach(g,OBJ[p.ob],i)||p.rf>=g.cfg.rfl)return;
+ p.done.push(p.ob);p.ob=null;p.obGot=false;p.rf++;p.obAt=g.hist.length;
+ const held=g.P.flatMap(q=>[q.ob,...q.done]),oc=shuf(g.od.filter(k=>!held.includes(k)&&stillPossible(g,OBJ[k]))).slice(0,g.cfg.od);
+ g.od=g.od.filter(k=>!oc.includes(k));p.oc=oc;if(oc.length&&(p.bot||oc.length==1))p.ob=p.bot?botObj(oc):oc[0];
+ if(oc.length)g.olog.push(`${p.n} draws a new secret objective.`)})}
+/* player i locks in cards [{s,r}]; returns true if accepted */
+function play(g,i,cards){const p=g.P[i];if(!p||p.bot||g.phase!='pick'||!Array.isArray(cards))return false;
+ if(needOb(g,p))return false;
+ if(cards.length!=EV[g.ev][1])return false;
+ const sel=[];for(const c of cards){const h=p.hand.find(x=>same(x,c)&&!sel.includes(x));if(!h)return false;sel.push(h)}
+ p.sel=sel;return true}
+function unplay(g,i){const p=g.P[i];if(!p||g.phase!='pick')return false;p.sel=null;return true}
+const allIn=g=>g.phase=='pick'&&g.P.every(p=>p.bot||p.sel);
+function reveal(g){const T=TRO(g);
+ g.P.forEach(p=>{const c=p.bot?botPick(g,p):p.sel;p.pl=c;p.hand=p.hand.filter(x=>!c.includes(x));p.sel=null});
+ const TH=tieOrder(g);g.ks=g.P.map(p=>key(p.pl,g.comm,TH,g.ev));let w=0;g.ks.forEach((x,i)=>{if(cmp(x,g.ks[w])>0)w=i});
+ g.nlog=[];g.ncl=[];g.P.forEach(p=>p.gt=[]);
+ const give=(i,pc)=>{const p=g.P[i];p.pd.push(pc);p.gt.push(pc)};
+ give(w,{k:'T',t:g.ev});
+ g.nobles.forEach(z=>{if(z.n.ev!=g.ev||z.sp[0]!=null)return;let bi=-1,bk=null;
+  g.P.forEach((p,i)=>{const r=nq(z.n,p.pl,g.comm);if(!r)return;const kk=nkey(z.n,r);if(!bk||cmp(kk,bk)>0){bk=kk;bi=i}});
+  if(bi<0){g.nlog.push(`${z.n.name} (${z.n.txt}): nobody qualified.`);return}
+  z.sp[0]=bi;g.P[bi].cr++;give(bi,{k:'T',t:CROWN});g.ncl.push({p:bi,v:1,nm:z.n.name});g.nlog.push(`${g.P[bi].n} wins ${z.n.name}'s crown (${z.n.txt}).`)});
+ /* boons: lost the event but played at least the minimum hand */
+ g.P.forEach((p,i)=>{if(i!=w&&boonOK(g.ks[i],g.ev,p.pl)){p.bn++;give(i,{k:'B'})}});
+ g.hist.push({w:g.wave,e:g.ev,win:w,cat:g.ks[w][0],pl:g.P[w].pl.slice()});g.win=w;g.P[w].tr.push(T);g.phase='show';g.P.forEach(p=>p.cont=false);
+ /* a completed secret objective earns a boon (the event win that completes it already gave a trophy) */
+ g.olog=[];if(g.cfg.obon)g.P.forEach((p,i)=>{if(p.ob==null||p.obGot||!ach(g,OBJ[p.ob],i))return;p.obGot=true;p.bn++;give(i,{k:'B',ob:1});g.olog.push(`${p.n} completed a secret objective and earns a boon.`)});
+ g.P.forEach((p,i)=>{if(p.bot)botPlace(g,i);else while(p.pd.length&&!legal(p,p.pd[0]).length)p.pd.shift()});refillObjectives(g)}
+function nxt(g){g.P.forEach((p,i)=>{if(p.pd&&p.pd.length)botPlace(g,i)});g.P.forEach(p=>p.cont=false);
+ if(g.ev==4){if(g.wave==3){g.phase='end';return}g.wave++;g.ev=0;g.phase='pick';deal(g)}
+ else{g.ev++;g.phase='pick';g.P.forEach(p=>{p.pl=[];p.sel=null});begin(g)}}
+/* what player `me` is allowed to see */
+function view(g,me){const open=g.phase=='end';
+ return {n:g.n,cfg:g.cfg,trs:g.trs,wave:g.wave,ev:g.ev,phase:g.phase,comm:g.comm,nobles:g.nobles,cl:g.cl,nlog:g.nlog,ncl:g.phase=='show'?g.ncl||[]:[],olog:g.olog,hist:g.hist,ks:g.phase=='show'?g.ks:null,win:g.win,me,
+  P:g.P.map((p,i)=>{const o={n:p.n,bot:p.bot,tr:p.tr,bd:p.bd,pd:p.pd,cr:p.cr,bn:p.bn,xt:p.xt,gt:p.gt,pl:g.phase=='pick'?[]:p.pl,hc:p.hand.length,locked:!!p.sel,cont:p.cont,ob:null,oc:null,hand:null,sel:null,done:null,dn:p.done.length,rf:0,obAt:0};
+   if(i==me||open){o.ob=p.ob;o.done=p.done;o.rf=p.rf;o.obAt=p.obAt}
+   if(i==me){o.hand=p.hand;o.oc=p.oc;o.sel=p.sel}
+   return o})}}
+
+const API={SU,COL,RK,EV,TR,HN,HP0,NOB,OBJ,defaultCfg,srt,same,shuf,cmp,combos,eN,best,bestCards,tie,key,handKey,champ,hname,nq,nkey,NV,TRO,npts,hpts,ach,obv,obp,needOb,ranking,
+ tieOrder,boonOK,CROWN,TNAME,VALS,DIV,MINH,obTrophy,legal,colPts,sqParts,sqScore,place,botPlace,gainT,
+ newGame,deal,botPick,pickObj,stillPossible,refillObjectives,play,unplay,allIn,reveal,nxt,view};
+if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.HZ=API;
+})(this);

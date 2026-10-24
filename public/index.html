@@ -233,6 +233,7 @@ html.onhome #app{padding:10px 10px 14px}
 .home2 .b.blue{background:var(--royal);color:var(--cream);box-shadow:0 2px 0 #0d1f48}
 .home2 .tutb{display:flex;align-items:center;gap:10px;text-align:left;margin:6px 0;padding:7px 12px;border:2px solid #fff3c4;background:linear-gradient(#f3cd62,#d9a531);font-size:12px;font-weight:600}
 .home2 .tutb b{display:block;font-size:16px;font-weight:800}.home2 .tsw{font-size:24px;line-height:1}
+.sqlink{position:absolute;top:14px;left:14px;z-index:3;display:flex;flex-direction:column;align-items:center;line-height:1.05;padding:4px 9px;border-radius:8px;background:#1b3a80;color:#efe2c0;text-decoration:none;font:600 10px system-ui,sans-serif;box-shadow:0 2px 0 #0d1f48}.sqlink b{font:400 16px 'IM Fell English SC',Georgia,serif;color:#f0c95a}
 .hpan{background:rgba(255,250,236,.7);border:1.5px solid rgba(27,58,128,.35);border-radius:10px;padding:5px 10px 9px;margin:6px 0 0;text-align:left}
 .hpan h2{font-family:"IM Fell English SC",Georgia,serif;font-weight:400;text-transform:none;letter-spacing:0;color:var(--royal);font-size:17px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
 .hpan h2::before,.hpan h2::after{content:'';flex:1;height:1.5px;background:linear-gradient(90deg,transparent,rgba(27,58,128,.5),transparent)}
@@ -413,6 +414,7 @@ function render(){const app=document.getElementById('app');
 function homeHTML(){const nm=esc(LS.get().name||'');
   return `<div class="home2">
   <button class="hrules" onclick="rules(1)">📜 Rules</button>
+  <a class="sqlink" href="/squire/">New:<b>SQUIRE</b></a>
   <div class="hbw"><div class="pole"></div><div class="pen1"><div class="pen2"><img src="logo.webp" alt="HUZZAH!" width="520" height="731"></div></div></div>
   <p class="hsub">The Tournament of Champions · 2 to 6 players</p>
   <input id="nm" maxlength="16" placeholder="Your name, champion" aria-label="Your name" value="${nm}" autocomplete="nickname" oninput="LS.set({name:this.value})">
