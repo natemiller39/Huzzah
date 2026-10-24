@@ -283,9 +283,22 @@ html,body{background:radial-gradient(ellipse 60% 45% at 8% 0%,rgba(255,150,50,.2
 /* your seat: dark leather with gold stitching */
 .you{background:linear-gradient(180deg,#2b1d12,#1c130c);box-shadow:inset 0 0 0 1px rgba(227,180,63,.25),inset 0 0 0 4px #1c130c,inset 0 0 0 5px rgba(227,180,63,.18),0 4px 10px rgba(0,0,0,.5)}
 .hsec{color:#efe2c0}
+/* reveal: cards at each player's name */
+.pseat.rev .scs{display:flex;justify-content:center;gap:2px;margin-bottom:-4px;position:relative;z-index:1}.pseat.rev .scs .c{--cw:30px;box-shadow:0 3px 6px rgba(0,0,0,.55)}.tbl.k4 .pseat.rev .scs .c{--cw:26px}
+.pseat.rev.win .scs{filter:drop-shadow(0 0 8px #ffd24a)}
+/* reveal pop-ups: big WINNER and noble crown that appear next to the player, then fade */
+.rpop{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);animation:rpop 2.6s ease both}
+.rpop.win{font:400 30px/1 "IM Fell English SC",Georgia,serif;letter-spacing:3px;text-transform:uppercase;color:#2a1d07;padding:10px 34px 12px;background:linear-gradient(#fff3c0,#f0c95a 45%,#c48f22);clip-path:polygon(0 0,100% 0,90% 50%,100% 100%,0 100%,10% 50%);white-space:nowrap}
+.rpop.win i{font-style:normal;margin-right:8px}
+.rpop.crn{width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff6cf,#f0c95a 55%,#a77b1c);border:3px solid #fff3c4;box-shadow:0 0 30px 6px rgba(255,210,74,.85),0 6px 12px rgba(0,0,0,.6);font-size:56px;line-height:86px;text-align:center;animation-delay:.5s}
+.rpop.crn b{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);font:800 18px/1 system-ui,sans-serif;color:#2a1d07;background:#fff3c4;border:2px solid #a77b1c;border-radius:12px;padding:3px 9px;white-space:nowrap}
+.rshade{position:fixed;inset:0;z-index:59;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 30%,rgba(0,0,0,.45));animation:rshade 2.6s ease both}
+@keyframes rpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}20%{transform:translate(-50%,-50%) scale(1)}78%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) scale(.9)}}
+@keyframes rshade{0%,100%{opacity:0}15%,75%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.rpop{animation:rfade 2.6s both}.rpop.crn{animation-delay:.5s}@keyframes rfade{0%,100%{opacity:0}10%,80%{opacity:1}}}
 </style></head><body><div id="app"></div>
 <script src="assets.js"></script>
-<script src="engine.js?v=31"></script>
+<script src="engine.js?v=32"></script>
 <script>
 const {SU,COL,RK,EV,HN,OBJ,cmp,best,bestCards,hname,nq,NV,TRO,npts,hpts,ach,obv,obp,needOb,ranking}=HZ;
 const PC=['#ffd24a','#ff6b6b','#5bc0ff','#7be07b','#c58cff','#ffa94d'],STI=['🏹','⚔️','🐎','🛡️','🏅'];
@@ -370,16 +383,28 @@ function buildHTML(){let h='';
 function fixTable(){const t=document.querySelector('.tbl'),me=t&&t.querySelector('.spot.me .cs'),c=t&&t.querySelector('.ctr');if(!me||!c)return;
   const R=e=>e.getBoundingClientRect(),parts=[...c.querySelectorAll('.tro1,.cm .row')].map(R);if(!parts.length)return;
   const U={l:Math.min(...parts.map(r=>r.left)),r:Math.max(...parts.map(r=>r.right)),t:Math.min(...parts.map(r=>r.top)),b:Math.max(...parts.map(r=>r.bottom))};
-  let over=Math.max(U.b,R(c).bottom)+6-R(me).top;if(over<=0)return;
   let lim=R(t).top+6;t.querySelectorAll('.pseat,.spot:not(.me),.deckpile').forEach(e=>{const r=R(e);if((r.top+r.bottom)/2<U.t&&r.right>U.l&&r.left<U.r)lim=Math.max(lim,r.bottom+4)});
+  const dn=Math.ceil(lim-U.t);if(dn>0){c.style.top=(parseFloat(c.style.top)+dn)+'px';U.t+=dn;U.b+=dn;const sp=me.parentNode;sp.style.top=(parseFloat(sp.style.top)+dn)+'px';t.style.height=(parseFloat(t.style.height)+dn)+'px'}
+  let over=Math.max(U.b,R(c).bottom)+6-R(me).top;if(over<=0)return;
   const up=Math.min(over,Math.max(0,Math.floor(U.t-lim)));if(up){c.style.top=(parseFloat(c.style.top)-up)+'px';over-=up}
   if(over>0){const sp=me.parentNode;over=Math.ceil(over);sp.style.top=(parseFloat(sp.style.top)+over)+'px';t.style.height=(parseFloat(t.style.height)+over)+'px'}}
+/* the reveal moment: a big WINNER next to the event winner and a big crown next to each noble winner, then they fade away */
+let lastReveal='';
+function revealPops(){if(!G||G.phase!='show')return;const key=G.wave+'-'+G.ev+'-'+G.hist.length;if(key==lastReveal)return;lastReveal=key;
+  document.querySelectorAll('.rpop,.rshade').forEach(e=>e.remove());
+  const at=i=>{const e=document.querySelector(`[data-p="${i}"]`);if(!e)return null;const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2,r}};
+  const add=(cls,html,x,y)=>{const d=document.createElement('div');d.className='rpop '+cls;d.innerHTML=html;
+    d.style.left=Math.max(70,Math.min(innerWidth-70,x))+'px';d.style.top=Math.max(50,Math.min(innerHeight-50,y))+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),3300)};
+  const sh=document.createElement('div');sh.className='rshade';document.body.appendChild(sh);setTimeout(()=>sh.remove(),3300);
+  const w=at(G.win);if(w)add('win',`<i>🏆</i>${G.win==G.me?'You win!':'Winner'}`,w.x,w.y);
+  const by={};(G.ncl||[]).forEach(c=>by[c.p]=(by[c.p]||0)+c.v);
+  Object.keys(by).forEach(p=>{const a=at(+p);if(!a)return;const same=+p==G.win;add('crn',`👑<b>${+p==G.me?'You':esc(G.P[p].n)} +${by[p]}</b>`,a.x+(same?(a.x<innerWidth/2?90:-90):0),a.y+(same?40:0))})}
 function render(){const app=document.getElementById('app');
   app.className=TUT?'tut hl-'+(tutStep().hl||''):'';document.documentElement.classList.toggle('onhome',!S&&!TUT);app.style.zoom='';FIT_SHRINK=0;app.innerHTML=buildHTML();fixTable();
   if(G&&G.phase!='end'){const de=document.documentElement,avail=viewH();let over=de.scrollHeight-avail;
     if(over>0){FIT_SHRINK=over;app.innerHTML=buildHTML();fixTable();over=de.scrollHeight-avail}
     if(over>0)app.style.zoom=Math.max(0.6,avail/de.scrollHeight).toFixed(3)}
-  if(G)dragSetup();if(TUT)tutAfterRender()}
+  if(G)dragSetup();if(TUT)tutAfterRender();revealPops()}
 
 function homeHTML(){const nm=esc(LS.get().name||'');
   return `<div class="home2">
@@ -434,13 +459,13 @@ function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost
   others.forEach((i,j)=>{const p=g.P[i],off=!p.bot&&!online(i),win=ph=='show'&&i==g.win,a=Math.PI*(1-(j+0.5)/K),c=Math.cos(a),sn=Math.sin(a);
    const x=cx+rx*c,y=cy-ry*sn,dx=cx-x,dy=cy-y,dl=Math.hypot(dx,dy)||1,sx=Math.round(x+dx/dl*D),sy=Math.min(Math.round(y+dy/dl*D),rowTop-30);
    const stat=ph!='pick'||p.bot?'':p.locked?' · ready':off?' · offline':' · choosing';
-   seats+=`<div class="pseat ${win?'win':''} ${off?'off':''}" style="left:${Math.round(x)}px;top:${Math.round(y)}px;--pc:${PC[i]}">${fan(TUT?Math.min(p.hc,TUT.oppDealt):p.hc)}<div class="plate">${K>=4?'':chip(i)}<b>${esc(p.n)}</b>${p.bot&&K<4?'🤖':''}</div><div class="pm">${p.tr.length}🏆${g.cfg.nn?' '+npts(g,i)+'★':''}${stat}</div>${ph=='show'?`<div class="hn2">${hname(g.ks[i],g.ev)}${win?' 🏆':''}</div>`:''}${host&&off&&ph!='end'?`<button class="b sm" onclick="send({t:'botify',seat:${i}})">Bot plays</button>`:''}</div>`;
-   const cs=ph=='show'?p.pl.map(c=>cd(c,'flip')).join(''):(p.locked||p.bot)&&ph=='pick'&&!(TUT&&!TUT.dealDone)?backs(k):'';
+   seats+=`<div data-p="${i}" class="pseat ${win?'win':''} ${off?'off':''} ${ph=='show'?'rev':''}" style="left:${Math.round(x)}px;top:${Math.round(y)}px;--pc:${PC[i]}">${ph=='show'?`<div class="scs">${p.pl.map(c=>cd(c,'flip')).join('')}</div>`:fan(TUT?Math.min(p.hc,TUT.oppDealt):p.hc)}<div class="plate">${K>=4?'':chip(i)}<b>${esc(p.n)}</b>${p.bot&&K<4?'🤖':''}</div><div class="pm">${p.tr.length}🏆${g.cfg.nn?' '+npts(g,i)+'★':''}${stat}</div>${ph=='show'?`<div class="hn2">${hname(g.ks[i],g.ev)}${win?' 🏆':''}</div>`:''}${host&&off&&ph!='end'?`<button class="b sm" onclick="send({t:'botify',seat:${i}})">Bot plays</button>`:''}</div>`;
+   const cs=ph=='show'?'':(p.locked||p.bot)&&ph=='pick'&&!(TUT&&!TUT.dealDone)?backs(k):'';
    if(cs)spots+=`<div class="spot ${win?'win':''}" style="left:${sx}px;top:${sy}px;--pc:${PC[i]}"><div class="cs">${cs}</div></div>`});
   const h0=g.P[me];let mine='',ml='';
   if(ph=='show'){mine=h0.pl.map(c=>cd(c,'flip')).join('');ml=hname(g.ks[me],g.ev)+(g.win==me?' 🏆':'')}
   else{const sc=selCards();mine=sc.map(c=>cd(c,'land',h0.sel?'':`pick(${order.indexOf(ck(c))})`)).join('')+Array(k-sc.length).fill('<span class="c ph"></span>').join('')}
-  const myspot=`<div class="spot me ${ph=='show'&&g.win==me?'win':''}" style="left:50%;top:${H-40}px;--pc:${PC[me]}"><div class="cs">${mine}</div>${ml?`<small>${ml}</small>`:h0.sel?'<small>Locked in</small>':''}</div>`;
+  const myspot=`<div data-p="${me}" class="spot me ${ph=='show'&&g.win==me?'win':''}" style="left:50%;top:${H-40}px;--pc:${PC[me]}"><div class="cs">${mine}</div>${ml?`<small>${ml}</small>`:h0.sel?'<small>Locked in</small>':''}</div>`;
   const ctr=`<div class="ctr" style="top:${rowTop}px"><div class="lrow"><div class="tro1 prize" title="Trophy for this event">${g.nobles.map((z,ni)=>z.n.ev==g.ev?`<i class="pcrown" onclick="zoomN(${ni})" title="${z.n.name} is watching this event: ${z.n.txt}">👑</i>`:'').join('')}${tcd(T)}<i class="plinth">🏆</i></div><div class="cm"><div class="row">${[0,1,2,3,4].map(i=>g.comm[i]?cd(g.comm[i]):'<span class="c ph"></span>').join('')}</div></div></div>${H>=H0?`<div class="evn">${STI[g.ev]} ${e[0]}, day ${g.wave+1}</div>`:''}</div>`;
   return `${TUT?`<div class="herald evstrip"><div class="sch2 one">${cells}</div></div>`:`<div class="herald">${sch}</div>`}<div class="tbl ${K>=4?'k4':''} ${K==1?'k1':''}" style="height:${H}px"><div class="top"></div>${TUT&&TUT.deckVis?`<div class="deckpile" style="left:${Math.round(W*0.8)}px;top:${Math.round(H*0.27)}px" title="The dealer's deck"><span>Deck</span></div>`:''}${seats}${spots}${ctr}${myspot}</div>
   ${ph=='show'?g.nlog.map(t=>`<div class="nl">👑 ${esc(t)}</div>`).join('')+(g.olog||[]).map(t=>`<div class="nl">🎯 ${esc(t)}</div>`).join(''):''}`}

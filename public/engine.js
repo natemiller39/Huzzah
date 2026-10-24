@@ -81,10 +81,18 @@ function newGame(players,cfg){const n=players.length;cfg=Object.assign(defaultCf
  if(cfg.obon)g.P.forEach(p=>{for(let k=0;k<cfg.od;k++)p.oc.push(od.length?od.pop():Math.random()*OBJ.length|0);p.ob=(p.bot||cfg.od==1)?p.oc[Math.random()*p.oc.length|0]:null});
  for(let i=0;i<cfg.nn;i++)g.nobles.push({n:drawNoble(g,g.nobles.map(z=>z.n)),sp:[null,null]});
  deal(g);return g}
-function botPick(g,p){const k=EV[g.ev][1],w=[25,22,15,8,0][g.ev],lv=g.nobles.filter(z=>z.n.ev==g.ev);let bs=-1e9,bc;
- for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev);let s=e[0]*1000+(e[1]||0)*12+(e[2]||0)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*150;
-  lv.forEach(z=>{if(nq(z.n,c,g.comm))s+=250+30*NV(g)[z.sp.indexOf(null)]});
-  if(s>bs){bs=s;bc=c}}return bc}
+/* bots play like people: each has a temperament, gets tilted by losing streaks, cocky after a win, and sometimes goes with a gut call */
+const MOODS={cold:{sv:1,nz:150,nb:1,slip:0},hothead:{sv:.4,nz:450,nb:.8,slip:.2},miser:{sv:1.8,nz:450,nb:1,slip:.15},glory:{sv:.9,nz:450,nb:2.2,slip:.15},gambler:{sv:.8,nz:800,nb:1.3,slip:.28},steady:{sv:1,nz:500,nb:1,slip:.15}};
+const TEMPERS=['hothead','miser','glory','gambler','steady'];
+function botPick(g,p){if(!p.mood)p.mood=TEMPERS[Math.random()*TEMPERS.length|0];
+ const M=MOODS[p.mood]||MOODS.steady,i=g.P.indexOf(p),k=EV[g.ev][1],lv=g.nobles.filter(z=>z.n.ev==g.ev);
+ let sv=M.sv,lost=0;for(let j=g.hist.length-1;j>=0&&g.hist[j].win!=i;j--)lost++;
+ if(M.slip){if(lost>=3)sv*=.5;else if(g.hist.length&&g.hist[g.hist.length-1].win==i)sv*=1.25}
+ const w=[25,22,15,8,0][g.ev]*sv,all=[];
+ for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev);let s=e[0]*1000+(e[1]||0)*12+(e[2]||0)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*M.nz;
+  lv.forEach(z=>{if(nq(z.n,c,g.comm))s+=(250+30*NV(g)[z.sp.indexOf(null)])*M.nb});all.push([s,c])}
+ all.sort((a,b)=>b[0]-a[0]);
+ return (Math.random()<M.slip?all[Math.random()*Math.min(4,all.length)|0]:all[0])[1]}
 /* player i picks objective k from their dealt options; can switch until the first reveal, and picks once after a refill */
 function pickObj(g,i,k){const p=g.P[i];if(!p||p.bot||g.phase=='end'||!Number.isInteger(k)||k<0||k>=p.oc.length)return false;if((g.hist.length||p.rf)&&p.ob!=null)return false;p.ob=p.oc[k];return true}
 /* could objective o still be completed in a future event? */
@@ -106,11 +114,11 @@ const allIn=g=>g.phase=='pick'&&g.P.every(p=>p.bot||p.sel);
 function reveal(g){const T=TRO(g);
  g.P.forEach(p=>{const c=p.bot?botPick(g,p):p.sel;p.pl=c;p.hand=p.hand.filter(x=>!c.includes(x));p.sel=null});
  g.ks=g.P.map(p=>key(p.pl,g.comm,T.h,g.ev));let w=0;g.ks.forEach((x,i)=>{if(cmp(x,g.ks[w])>0)w=i});
- g.nlog=[];const ex=[];
+ g.nlog=[];g.ncl=[];const ex=[];
  g.nobles.forEach((z,ni)=>{if(z.n.ev!=g.ev)return;let bi=-1,bk=null;
   g.P.forEach((p,i)=>{const r=nq(z.n,p.pl,g.comm);if(!r)return;const kk=nkey(z.n,r);if(!bk||cmp(kk,bk)>0){bk=kk;bi=i}});
   if(bi<0){g.nlog.push(`${z.n.name} (${z.n.txt}): nobody qualified.`);return}
-  const idx=z.sp.indexOf(null);z.sp[idx]=bi;g.cl.push({p:bi,i:idx});g.nlog.push(`${g.P[bi].n} claims a spot on ${z.n.name} (${z.n.txt}): +${NV(g)[idx]}`);
+  const idx=z.sp.indexOf(null);z.sp[idx]=bi;g.cl.push({p:bi,i:idx});g.ncl.push({p:bi,v:NV(g)[idx],nm:z.n.name});g.nlog.push(`${g.P[bi].n} claims a spot on ${z.n.name} (${z.n.txt}): +${NV(g)[idx]}`);
   if(z.sp.every(x=>x!=null))ex.push(ni)});
  ex.forEach(ni=>{const old=g.nobles[ni].n,nz=drawNoble(g,g.nobles.filter((_,j)=>j!=ni).map(z=>z.n));g.nobles[ni]={n:nz,sp:[null,null]};g.nlog.push(`${old.name} is exhausted. New noble: ${nz.name} (${EV[nz.ev][0]}).`)});
  g.hist.push({w:g.wave,e:g.ev,win:w,cat:g.ks[w][0],pl:g.P[w].pl.slice()});g.win=w;g.P[w].tr.push(T);g.phase='show';g.P.forEach(p=>p.cont=false);refillObjectives(g)}
@@ -119,7 +127,7 @@ function nxt(g){g.P.forEach(p=>p.cont=false);
  else{g.ev++;g.phase='pick';g.P.forEach(p=>{p.pl=[];p.sel=null});begin(g)}}
 /* what player `me` is allowed to see */
 function view(g,me){const open=g.phase=='end';
- return {n:g.n,cfg:g.cfg,trs:g.trs,wave:g.wave,ev:g.ev,phase:g.phase,comm:g.comm,nobles:g.nobles,cl:g.cl,nlog:g.nlog,olog:g.olog,hist:g.hist,ks:g.phase=='show'?g.ks:null,win:g.win,me,
+ return {n:g.n,cfg:g.cfg,trs:g.trs,wave:g.wave,ev:g.ev,phase:g.phase,comm:g.comm,nobles:g.nobles,cl:g.cl,nlog:g.nlog,ncl:g.phase=='show'?g.ncl||[]:[],olog:g.olog,hist:g.hist,ks:g.phase=='show'?g.ks:null,win:g.win,me,
   P:g.P.map((p,i)=>{const o={n:p.n,bot:p.bot,tr:p.tr,pl:g.phase=='pick'?[]:p.pl,hc:p.hand.length,locked:!!p.sel,cont:p.cont,ob:null,oc:null,hand:null,sel:null,done:null,dn:p.done.length,rf:0,obAt:0};
    if(i==me||open){o.ob=p.ob;o.done=p.done;o.rf=p.rf;o.obAt=p.obAt}
    if(i==me){o.hand=p.hand;o.oc=p.oc;o.sel=p.sel}
