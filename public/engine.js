@@ -82,17 +82,27 @@ function newGame(players,cfg){const n=players.length;cfg=Object.assign(defaultCf
  for(let i=0;i<cfg.nn;i++)g.nobles.push({n:drawNoble(g,g.nobles.map(z=>z.n)),sp:[null,null]});
  deal(g);return g}
 /* bots play like people: each has a temperament, gets tilted by losing streaks, cocky after a win, and sometimes goes with a gut call */
-const MOODS={cold:{sv:1,nz:150,nb:1,slip:0},hothead:{sv:.4,nz:450,nb:.8,slip:.2},miser:{sv:1.8,nz:450,nb:1,slip:.15},glory:{sv:.9,nz:450,nb:2.2,slip:.15},gambler:{sv:.8,nz:800,nb:1.3,slip:.28},steady:{sv:1,nz:500,nb:1,slip:.15}};
+/* bots play like people: each has a temperament, gets tilted by losing streaks, cocky after a win, and sometimes goes with a gut call.
+   They also plan: they spend good cards on trophies that build their final poker hand, chase the nobles at this event,
+   and hold on to cards that qualify for nobles coming later in the wave. */
+const MOODS={cold:{sv:1,nz:150,nb:1,slip:0,plan:0},hothead:{sv:.55,nz:260,nb:1,slip:.08,plan:1},miser:{sv:1.5,nz:260,nb:1,slip:.06,plan:1},glory:{sv:.9,nz:260,nb:1.8,slip:.06,plan:1},gambler:{sv:.85,nz:480,nb:1.2,slip:.12,plan:1},steady:{sv:1,nz:220,nb:1.2,slip:.04,plan:1}};
 const TEMPERS=['hothead','miser','glory','gambler','steady'];
 function botPick(g,p){if(!p.mood)p.mood=TEMPERS[Math.random()*TEMPERS.length|0];
  const M=MOODS[p.mood]||MOODS.steady,i=g.P.indexOf(p),k=EV[g.ev][1],lv=g.nobles.filter(z=>z.n.ev==g.ev);
  let sv=M.sv,lost=0;for(let j=g.hist.length-1;j>=0&&g.hist[j].win!=i;j--)lost++;
- if(M.slip){if(lost>=3)sv*=.5;else if(g.hist.length&&g.hist[g.hist.length-1].win==i)sv*=1.25}
+ if(M.slip){if(lost>=3)sv*=.6;else if(g.hist.length&&g.hist[g.hist.length-1].win==i)sv*=1.2}
+ let want=1;
+ if(M.plan){const hv=cs=>cs.length?g.cfg.hp[best(cs)[0]]:0,d=hv([...p.tr,TRO(g)])-hv(p.tr);
+  want=d>0?1+d/4:(p.tr.length>=5?.6:1);sv/=want}
+ const later=M.plan?g.nobles.filter(z=>z.n.ev>g.ev):[];
  const w=[25,22,15,8,0][g.ev]*sv,all=[];
- for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev);let s=e[0]*1000+(e[1]||0)*12+(e[2]||0)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*M.nz;
-  lv.forEach(z=>{if(nq(z.n,c,g.comm))s+=(250+30*NV(g)[z.sp.indexOf(null)])*M.nb});all.push([s,c])}
+ for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev);let s=(e[0]*1000+(e[1]||0)*12+(e[2]||0))*(M.plan?Math.min(1.6,want):1)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*M.nz;
+  lv.forEach(z=>{const r=nq(z.n,c,g.comm);if(r)s+=(M.plan?420+90*NV(g)[z.sp.indexOf(null)]:250+30*NV(g)[z.sp.indexOf(null)])*M.nb});
+  if(later.length){const rest=p.hand.filter(x=>!c.includes(x));
+   later.forEach(z=>{const kk=EV[z.n.ev][1];if(rest.length>=kk&&combos(rest,kk).some(cc=>nq(z.n,cc,g.comm)))s+=140*M.nb})}
+  all.push([s,c])}
  all.sort((a,b)=>b[0]-a[0]);
- return (Math.random()<M.slip?all[Math.random()*Math.min(4,all.length)|0]:all[0])[1]}
+ return (Math.random()<M.slip?all[Math.random()*Math.min(3,all.length)|0]:all[0])[1]}
 /* player i picks objective k from their dealt options; can switch until the first reveal, and picks once after a refill */
 function pickObj(g,i,k){const p=g.P[i];if(!p||p.bot||g.phase=='end'||!Number.isInteger(k)||k<0||k>=p.oc.length)return false;if((g.hist.length||p.rf)&&p.ob!=null)return false;p.ob=p.oc[k];return true}
 /* could objective o still be completed in a future event? */
