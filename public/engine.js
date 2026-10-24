@@ -4,7 +4,9 @@
 const SU=['♠','♥','♦','♣','✦'],COL=['#6f9be8','#9b6bff','#ff4a4a','#8fff00','#ffe600'],RK=[0,0,2,3,4,5,6,7,8,9,10,'J','Q','K','A'];
 const EV=[['Archery',2,0],['Sword Fight',2,3],['Joust',2,4],['Grand Melee',2,5],['Champion',1,5]],TR=[10,11,12,13,14];
 const HN=['High card','Pair','Two pair','Three of a kind','Straight','Flush','Full house','Four of a kind','Straight flush','Royal flush'];
-const HP0=[0,2,4,6,8,10,12,14,16,18];
+/* trophies are only 10 to A, so a straight (one trophy from every event) is harder than a full house and scores more;
+   a plain flush or straight flush can't happen (five trophies of one suit are a royal flush) */
+const HP0=[0,2,4,8,12,10,10,14,16,18];
 const NOB=[
 {id:'j-arch',name:'The Jester',ev:0,kind:'lowpair',h:[3,0,2,1,4],txt:'Lowest pair'},
 {id:'c-sf',name:'The Countess',ev:1,kind:'gap',h:[2,1,4,3,0],txt:'Biggest gap between your 2 cards'},
