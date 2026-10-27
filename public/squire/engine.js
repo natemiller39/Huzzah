@@ -37,7 +37,10 @@ const obTrophy=(o,ev)=>o.k=='ev'?o.ev:o.k=='ch5'?4:ev;
 function legal(p,pc){const bd=p.bd||[],out=[],nw=bd.length<6?[bd.length]:[];
  if(pc.k=='T'){const ci=bd.findIndex(c=>c.t===pc.t);if(ci>=0)return bd[ci].s.length<4?[ci]:[];
   bd.forEach((c,j)=>{if(c.t==null&&c.s.length<4)out.push(j)});return nw.concat(out)}
- bd.forEach((c,j)=>{if(c.s.length<4)out.push(j)});return nw.concat(out)}
+ /* boons: sideways into the next bottom box, or up a column with a trophy at the bottom. A column that starts with a boon
+    only takes more boons once the row below is full across all six columns. */
+ const rowFull=L=>bd.length==6&&bd.every(c=>c.s.length>=L);
+ bd.forEach((c,j)=>{if(c.s.length<4&&(c.s[0]=='T'||rowFull(c.s.length)))out.push(j)});return nw.concat(out)}
 function colPts(g,c,j){if(c.t==null)return 0;const h=c.s.lastIndexOf('T');return h>=1?VALS[g.cfg.brd=='b'?'b':'a'][j][h-1]:0}
 function sqParts(g,i){const p=g.P[i],bd=p.bd||[],types=bd.filter(c=>c.t!=null).length;
  return {base:(p.tr||[]).length+(p.cr||0)+(p.xt||0),cols:bd.reduce((a,c,j)=>a+colPts(g,c,j),0),div:DIV[types]}}
