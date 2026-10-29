@@ -119,8 +119,11 @@ function begin(g){while(g.comm.length<EV[g.ev][2])g.comm.push(g.deck.pop())}
 function deal(g){const kept=g.P.map(p=>p.hand.slice()),kc=[].concat(...kept),d=[];
  for(let s=0;s<(g.n>4?5:4);s++)for(let r=2;r<=14;r++)if(!kc.some(c=>c.s==s&&c.r==r))d.push({s,r});shuf(d);
  g.P.forEach((p,i)=>{p.hand=kept[i].concat(d.splice(0,10-kept[i].length)).sort(srt);p.pl=[];p.sel=null});g.deck=d;g.comm=[];
- /* a new noble (the favor banner) comes out each day */
- g.nobles=[];for(let k=0;k<(g.cfg.nn||0);k++)g.nobles.push({n:drawNoble(g,g.nobles.map(z=>z.n)),sp:[null]});
+ /* a new noble (the favor banner) comes out each day; the next day's noble is drawn a day early and shown to everyone,
+    so players can plan which card to keep */
+ const nn=g.cfg.nn||0,draw=()=>{const out=[];for(let k=0;k<nn;k++)out.push(drawNoble(g,out));return out};
+ const today=g.nextN&&g.nextN.length==nn?g.nextN:draw();
+ g.nobles=today.map(n=>({n,sp:[null]}));g.nextN=g.wave<3?draw():[];
  begin(g)}
 /* bots keep the objective that is easiest to finish: event wins first, then the higher reward */
 const OBE={ev:3,hand:1,kq:1,ch5:2};
@@ -169,6 +172,8 @@ function botPick(g,p){if(!p.mood)p.mood=TEMPERS[Math.random()*TEMPERS.length|0];
   if(M.plan&&boonOK(e,g.ev,c))s+=120;
   if(later.length){const rest=p.hand.filter(x=>!c.includes(x));
    later.forEach(z=>{const kk=EV[z.n.ev][1];if(rest.length>=kk&&combos(rest,kk).some(cc=>nq(z.n,cc,g.comm)))s+=140*M.nb})}
+  if(M.plan&&g.ev==4&&g.nextN&&g.nextN.length){const kept=p.hand.filter(x=>!c.includes(x))[0];
+   if(kept)g.nextN.forEach(n=>{if(n.kind=='suit'&&kept.s==n.suit)s+=60+kept.r*6;else if(n.kind=='lowdia'&&kept.s==2)s+=60+(15-kept.r)*6})}
   if(o){if(o.k=='hand'&&e[0]==o.cat&&g.ev>0)s+=220*ov;
    else if(o.k=='kq'&&c.some(x=>x.r==13)&&c.some(x=>x.r==12))s+=220*ov;
    else if(o.k=='ch5'){if(g.ev==4&&c[0].r<=5)s+=220*ov;else if(g.ev<4&&p.hand.some(x=>x.r<=5&&!c.includes(x)))s+=60*ov}}
@@ -214,7 +219,7 @@ function nxt(g){g.P.forEach((p,i)=>{if(p.pd&&p.pd.length)botPlace(g,i)});g.P.for
  else{g.ev++;g.phase='pick';g.P.forEach(p=>{p.pl=[];p.sel=null});begin(g)}}
 /* what player `me` is allowed to see */
 function view(g,me){const open=g.phase=='end';
- return {n:g.n,cfg:g.cfg,trs:g.trs,wave:g.wave,ev:g.ev,phase:g.phase,comm:g.comm,nobles:g.nobles,cl:g.cl,nlog:g.nlog,ncl:g.phase=='show'?g.ncl||[]:[],olog:g.olog,hist:g.hist,ks:g.phase=='show'?g.ks:null,win:g.win,me,
+ return {n:g.n,cfg:g.cfg,trs:g.trs,wave:g.wave,ev:g.ev,phase:g.phase,comm:g.comm,nobles:g.nobles,nextN:g.nextN||[],cl:g.cl,nlog:g.nlog,ncl:g.phase=='show'?g.ncl||[]:[],olog:g.olog,hist:g.hist,ks:g.phase=='show'?g.ks:null,win:g.win,me,
   P:g.P.map((p,i)=>{const o={n:p.n,bot:p.bot,tr:p.tr,bd:p.bd,pd:p.pd,cr:p.cr,bn:p.bn,xt:p.xt,gt:p.gt,pl:g.phase=='pick'?[]:p.pl,hc:p.hand.length,locked:!!p.sel,cont:p.cont,ob:null,oc:null,hand:null,sel:null,done:null,dn:p.done.length,rf:0,obAt:0};
    if(i==me||open){o.ob=p.ob;o.done=p.done;o.rf=p.rf;o.obAt=p.obAt}
    if(i==me){o.hand=p.hand;o.oc=p.oc;o.sel=p.sel}
