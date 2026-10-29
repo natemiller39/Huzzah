@@ -352,9 +352,9 @@ html,body{background:radial-gradient(ellipse 60% 45% at 8% 0%,rgba(255,150,50,.2
 .rpop.bn{font:700 15px system-ui,sans-serif;color:#efe2c0;background:linear-gradient(#2c4f9e,#1b3a80);border:2px solid #e3b43f;border-radius:20px;padding:6px 14px;white-space:nowrap;box-shadow:0 0 16px rgba(80,120,220,.8);animation-delay:.9s}
 .rpop.bn b{margin-left:6px}
 .sc.st tr{cursor:pointer}
-.fnext{position:absolute;left:91.7%;top:34.5%;transform:translateX(-50%);z-index:2;cursor:zoom-in}
-.fnext small{display:block;font:700 8.5px/1.15 system-ui,sans-serif;text-align:center;color:#efe2c0;background:rgba(20,13,8,.88);border:1px solid rgba(227,180,63,.65);border-radius:5px;padding:2px 4px;white-space:nowrap}
-.fnext:hover small,.fnext:focus-visible small{border-color:#ffd24a}
+.fnext{position:absolute;left:91.7%;top:33.6%;transform:translateX(-50%);z-index:2;cursor:zoom-in}
+.fnext small{display:block;font:400 10px/1.2 "IM Fell English SC",Georgia,serif;color:rgba(239,226,192,.82);background:rgba(20,13,8,.45);border-radius:4px;padding:1px 5px;white-space:nowrap}
+.fnext:hover small,.fnext:focus-visible small{color:#efe2c0;background:rgba(20,13,8,.7)}
 </style></head><body><div id="app"></div>
 <script src="../assets.js"></script>
 <script src="engine.js?v=35"></script>
@@ -564,7 +564,7 @@ function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost
   const tops=EV.map((x,i)=>{const hw=g.hist.find(z=>z.w==g.wave&&z.e==i),nb=g.nobles.some(z=>z.n.ev==i&&z.sp[0]==null);
    return `<div class="fslot ${i==g.ev?'on':''}" style="left:${SLOTX[i]}%">${nb?'<i class="fcr">👑</i>':''}${hw?`<i class="fwon" style="background:${PC[hw.win]}" title="Won by ${esc(g.P[hw.win].n)}"></i>`:''}</div>`}).join('');
   const z=g.nobles[0],favor=z?`<div class="ffav" onclick="zoomN(0)" title="${z.n.name}: ${z.n.txt}"><img src="${NIMG[z.n.id]}" alt="${z.n.name}">${z.sp[0]!=null?`<i class="fdone" style="background:${PC[z.sp[0]]}">👑</i>`:''}</div>`:'';
-  const nx=(g.nextN||[])[0],tomorrow=nx&&g.phase!='end'?`<div class="fnext" onclick="zoomN(0,1)" title="Tomorrow's noble: ${nx.name}, ${EV[nx.ev][0]}: ${nx.txt}"><small>Tomorrow’s<br>noble ▸</small></div>`:'';
+  const nx=(g.nextN||[])[0],tomorrow=nx&&g.phase!='end'?`<div class="fnext" onclick="zoomN(0,1)" title="Tomorrow's noble: ${nx.name}, ${EV[nx.ev][0]}: ${nx.txt}"><small>tomorrow ›</small></div>`:'';
   const bots=[0,1,2,3,4].map(i=>`<div class="fbot" style="left:${BOTX[i+1]}%">${g.comm[i]?cd(g.comm[i]):''}</div>`).join('');
   let mine='',ml='';
   if(ph=='show'){mine=h0.pl.map(c=>cd(c,'flip')).join('');ml=hname(g.ks[me],g.ev)+(g.win==me?' 🏆':'')}
