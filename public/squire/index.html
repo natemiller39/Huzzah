@@ -319,8 +319,8 @@ html,body{background:radial-gradient(ellipse 60% 45% at 8% 0%,rgba(255,150,50,.2
 .ffav{position:absolute;left:86%;top:8.5%;width:11.3%;height:22%;display:flex;align-items:center;justify-content:center;cursor:zoom-in}
 .ffav img{height:100%;width:auto;border-radius:3px;box-shadow:0 2px 5px rgba(0,0,0,.5)}
 .fdone{position:absolute;right:-4px;bottom:-4px;font-style:normal;font-size:11px;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;border:2px solid #fff}
-.finfo{position:absolute;left:2%;top:46%;z-index:2;margin:0;border:1px solid rgba(227,180,63,.6);border-radius:7px;background:rgba(20,13,8,.82);color:#efe2c0;padding:2px 6px;font:600 10px/1.25 system-ui,sans-serif;text-align:left;cursor:pointer;white-space:nowrap}
-.finfo.open{padding:3px 7px}.finfo>b{display:block;font:400 12px/1.2 "IM Fell English SC",Georgia,serif}.fties{display:block;font-size:10px}.fties b{font-size:11px}
+.fday{position:absolute;left:2%;top:43%;background:rgba(20,13,8,.82);color:#efe2c0;border:1px solid rgba(227,180,63,.6);border-radius:8px;padding:2px 7px;font:400 12px/1.2 "IM Fell English SC",Georgia,serif;white-space:nowrap}
+.fties{position:absolute;left:2%;top:51.5%;background:rgba(20,13,8,.75);color:#efe2c0;border-radius:6px;padding:1px 6px;font-size:10px;white-space:nowrap}.fties b{font-size:11px}
 .fbot{position:absolute;top:66.4%;width:12.9%;height:27%;display:flex;align-items:center;justify-content:center}
 .fbot .c{--cw:calc(min(100vw,680px)*.112);box-shadow:0 3px 6px rgba(0,0,0,.55)}
 .fbot.deck .c{box-shadow:2px 2px 0 #1b2240,4px 4px 0 #2a3260,5px 6px 8px rgba(0,0,0,.5)}
@@ -471,7 +471,7 @@ function fixTable(){const t=document.querySelector('.tbl'),me=t&&t.querySelector
   const up=Math.min(over,Math.max(0,Math.floor(U.t-lim)));if(up){c.style.top=(parseFloat(c.style.top)-up)+'px';over-=up}
   if(over>0){const sp=me.parentNode;over=Math.ceil(over);sp.style.top=(parseFloat(sp.style.top)+over)+'px';t.style.height=(parseFloat(t.style.height)+over)+'px'}}
 /* the reveal moment: a big WINNER next to the event winner and a big crown next to each noble winner, then they fade away */
-let lastReveal='',infoOpen=false;
+let lastReveal='';
 function revealPops(){if(!G||G.phase!='show')return;const key=G.wave+'-'+G.ev+'-'+G.hist.length;if(key==lastReveal)return;lastReveal=key;
   document.querySelectorAll('.rpop,.rshade').forEach(e=>e.remove());
   const at=i=>{const e=document.querySelector(`[data-p="${i}"]`);if(!e)return null;const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2,r}};
@@ -569,8 +569,8 @@ function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost
   let mine='',ml='';
   if(ph=='show'){mine=h0.pl.map(c=>cd(c,'flip')).join('');ml=hname(g.ks[me],g.ev)+(g.win==me?' 🏆':'')}
   else{const sc=selCards();mine=sc.map(c=>cd(c,'land',h0.sel?'':`pick(${order.indexOf(ck(c))})`)).join('')}
-  const ties=`<span class="fties">Ties: ${HZ.tieOrder(g).map(su=>`<b style="color:${COL[su]}">${SU[su]}</b>`).join(' ')}</span>`;
-  return `<div class="oseats">${seats}</div><div class="field"><img class="fimg" src="field.webp" alt="">${tops}${favor}${tomorrow}<button class="finfo ${infoOpen?'open':''}" onclick="infoOpen=!infoOpen;render()" aria-expanded="${infoOpen}" title="Day and tie-break order">${infoOpen?`<b>Day ${g.wave+1} · ${STI[g.ev]} ${e[0]}</b>${ties}`:`Day ${g.wave+1} ▸`}</button>
+  const ties=`<div class="fties" title="If hands tie, the noble's suit order decides, best first">Ties: ${HZ.tieOrder(g).map(su=>`<b style="color:${COL[su]}">${SU[su]}</b>`).join(' ')}</div>`;
+  return `<div class="oseats">${seats}</div><div class="field"><img class="fimg" src="field.webp" alt="">${tops}${favor}${tomorrow}<div class="fday">Day ${g.wave+1} · ${STI[g.ev]} ${e[0]}</div>${ties}
    <div class="fbot deck" style="left:${BOTX[0]}%"><span class="c tb"></span></div>${bots}
    <div data-p="${me}" class="spot me ${ph=='show'&&g.win==me?'win':''}"><div class="cs">${mine}</div>${ml?`<small>${ml}</small>`:h0.sel?'<small>Locked in</small>':''}</div></div>
   ${ph=='show'?g.nlog.map(t=>`<div class="nl">👑 ${esc(t)}</div>`).join('')+(g.olog||[]).map(t=>`<div class="nl">🎯 ${esc(t)}</div>`).join(''):''}`}

@@ -89,7 +89,7 @@ const until = async (f, ms = 3000) => { const t = Date.now(); while (!f()) { if 
   while (o.state.g.phase !== 'end') {
     const g2 = o.state.g, mine = g2.P[0];
     if (mine.ob == null && mine.oc.length) { if (g2.hist.length) refills++; o.send({ t: 'obj', k: 0 }); await until(() => o.state.g.P[0].ob != null); continue; }
-    if (g2.phase === 'pick' && !mine.locked) { o.send({ t: 'play', cards: mine.hand.slice(0, [2, 2, 2, 2, 1][g2.ev]) }); await until(() => o.state.g.phase !== 'pick' || o.state.g.P[0].ob == null); }
+    if (g2.phase === 'pick' && !mine.locked) { o.send({ t: 'play', cards: mine.hand.slice(0, [2, 2, 2, 2, 1][g2.ev]) }); await until(() => o.state.g.phase !== 'pick' || o.state.g.P[0].locked || (o.state.g.P[0].ob == null && o.state.g.P[0].oc.length > 0)); await sleep(10); }
     else if (g2.phase === 'show') { await placeAll(o); const at = g2.wave * 5 + g2.ev; o.send({ t: 'cont' }); await until(() => o.state.g.phase !== 'show' || o.state.g.wave * 5 + o.state.g.ev !== at); }
     else await sleep(10);
   }
