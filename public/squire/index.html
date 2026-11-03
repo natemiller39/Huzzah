@@ -355,8 +355,12 @@ html,body{background:radial-gradient(ellipse 60% 45% at 8% 0%,rgba(255,150,50,.2
 .fnext{position:absolute;left:91.7%;top:33.6%;transform:translateX(-50%);z-index:2;cursor:zoom-in}
 .fnext small{display:block;font:400 10px/1.2 "IM Fell English SC",Georgia,serif;color:rgba(239,226,192,.82);background:rgba(20,13,8,.45);border-radius:4px;padding:1px 5px;white-space:nowrap}
 .fnext:hover small,.fnext:focus-visible small{color:#efe2c0;background:rgba(20,13,8,.7)}
+.pchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 6px}.placer .b.pchip{margin:0;padding:6px 10px;font-size:13px;background:rgba(20,13,8,.75);color:#efe2c0;border:1.5px solid rgba(227,180,63,.5);box-shadow:none}.placer .b.pchip.on{background:#e3b43f;color:#2a1d07;border-color:#fff3c4;box-shadow:0 0 10px rgba(255,210,74,.7)}.placer .b.pchip:disabled{opacity:.45}
+.ptip{text-align:center;font-size:11px;color:#efe2c0;opacity:.85;margin:-2px 0 6px}
+@media (max-height:620px){.ptip{display:none}.sqb.place{max-width:215px}.placer .hsec{margin-bottom:3px}}
 </style></head><body><div id="app"></div>
 <script src="../assets.js"></script>
+<script src="objimg.js"></script>
 <script src="engine.js?v=35"></script>
 <script>
 const {SU,COL,RK,EV,HN,OBJ,cmp,best,bestCards,hname,nq,NV,TRO,npts,hpts,ach,obv,obp,needOb,ranking}=HZ;
@@ -382,7 +386,7 @@ function offSend(m){
   if(m.t=='obj')HZ.pickObj(g,0,m.k);
   else if(m.t=='play'){if(!HZ.play(g,0,m.cards))return toast('Those cards can’t be played right now.');if(HZ.allIn(g))HZ.reveal(g)}
   else if(m.t=='unplay')HZ.unplay(g,0);
-  else if(m.t=='place'){if(!HZ.place(g,0,m.col|0))return toast('That piece can’t go there.')}
+  else if(m.t=='place'){if(!HZ.place(g,0,m.col|0,m.k|0))return toast('That piece can’t go there.')}
   else if(m.t=='cont'){if(g.phase!='show')return;if(g.P[0].pd&&g.P[0].pd.length)return toast('Place your pieces on your board first.');HZ.nxt(g)}
   else if(m.t=='again')return offSend({t:'solo',name:g.P[0].n,size:g.n,cfg:g.cfg});
   else if(m.t=='leave'||m.t=='lobby'){LG=null;S=null;G=null;render();return}
@@ -539,7 +543,7 @@ function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[
 const BCOL=['#8e2a22','#3f6b2a','#1f3f86','#5a2f7a','#b8862a','#262626'],DIVL=['','+1','+2','+3','+5','+7'];
 const SLOTX=[7.9,20.8,33.5,46.7,60.0],BOTX=[4.4,20.1,35.7,51.4,67.1,82.7];
 const pieceHTML=(k,t)=>k=='B'?'<i class="pc bn" title="Boon">⚜</i>':t==HZ.CROWN?'<i class="pc cr" title="Crown">👑</i>':`<i class="pc tp" title="${HZ.TNAME[t]} trophy" style="background-position:${t*25}% 0"></i>`;
-function boardHTML(p,mode){const g=G,bd=p.bd||[],V=HZ.VALS[g.cfg.brd=='b'?'b':'a'],pc=mode=='place'&&p.pd&&p.pd[0],L=pc?HZ.legal(p,pc):[],types=bd.filter(c=>c.t!=null).length;
+function boardHTML(p,mode){const g=G,bd=p.bd||[],V=HZ.VALS[g.cfg.brd=='b'?'b':'a'],pc=mode=='place'&&p.pd&&p.pd[Math.min(placeK,p.pd.length-1)],L=pc?HZ.legal(p,pc):[],types=bd.filter(c=>c.t!=null).length;
   let cols='';
   for(let j=0;j<6;j++){const c=bd[j],top=c&&c.t!=null?c.s.lastIndexOf('T'):-1;let cells='';
    for(let lv=3;lv>=0;lv--){const x=c&&c.s[lv],tg=L.includes(j)&&(c?c.s.length:0)==lv;
@@ -550,7 +554,10 @@ function boardHTML(p,mode){const g=G,bd=p.bd||[],V=HZ.VALS[g.cfg.brd=='b'?'b':'a
   if(mode=='mini')return `<div class="sqb mini" onclick="scores(1)" title="Your scorecard">${cols}</div>`;
   return `<div class="sqb ${mode}">${cols}</div><div class="divt">${DIVL.map((v,k)=>`<span class="${types>k?'on':''}">${v||'1'}</span>`).join('')}<small>types</small></div>
   <div class="sqsum">${pr.base} trophies + ${pr.cols} board + ${pr.div} variety = <b>${tot} pts</b></div>`}
-function placeAt(j){send({t:'place',col:j})}
+let placeK=0;
+function placeAt(j){const k=Math.min(placeK,myP().pd.length-1);placeK=0;send({t:'place',col:j,k})}
+const pieceName=pc=>pc.k=='B'?(pc.ob?'Boon (objective)':'Boon'):pc.t==HZ.CROWN?'Crown':HZ.TNAME[pc.t]+' trophy';
+const pieceIcon=pc=>pc.k=='B'?'⚜':pc.t==HZ.CROWN?'👑':STI[pc.t];
 function zoomB(i){const p=G.P[i];let d=document.getElementById('rules');if(!d){d=document.createElement('div');d.id='rules';document.body.appendChild(d)}
   d.innerHTML=`<div class="rp"><button class="b" onclick="scores(0)">Close</button><h2>${esc(p.n)}'s scorecard</h2>${boardHTML(p,'big')}</div>`;d.style.display='block'}
 function arenaHTML(T){const g=G,e=EV[g.ev],ph=g.phase,k=e[1],me=g.me,host=isHost(),h0=g.P[me];
@@ -582,7 +589,7 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
     else if(h0.sel){st='Locked in → '+hname(HZ.handKey(selCards(),g.comm,g.ev),g.ev);const w=names(i=>!g.P[i].locked);wait=w.length?'Waiting for '+w.join(', '):''}
     else{const sc=selCards(),full=sc.length==k,nm=full?g.nobles.filter(z=>z.n.ev==g.ev&&nq(z.n,sc,g.comm)).map(z=>'✓ '+z.n.name):[];
      st=`Choose ${k} card${k>1?'s':''} (${sc.length}/${k})`+(full?' → '+hname(HZ.handKey(sc,g.comm,g.ev),g.ev)+(nm.length?' · '+nm.join(', '):''):'')}}
-  if(ph=='show'){const pd=h0.pd&&h0.pd[0];st=pd?(pd.k=='B'?`You earned a boon${pd.ob?' (secret objective)':''}! Place it on your board`:`Place your ${HZ.TNAME[pd.t]} ${pd.t==HZ.CROWN?'':'trophy '}on your board`):`${g.win==me?'You win':esc(g.P[g.win].n)+' wins'} the trophy!`;if(h0.cont){const w=names(i=>!g.P[i].cont&&online(i));wait=w.length?'Waiting for '+w.join(', '):''}}
+  if(ph=='show'){const pd=h0.pd&&h0.pd[0];st=pd?(h0.pd.length>1?`You earned ${h0.pd.length} pieces! Place them on your board`:pd.k=='B'?`You earned a boon${pd.ob?' (secret objective)':''}! Place it on your board`:`Place your ${HZ.TNAME[pd.t]} ${pd.t==HZ.CROWN?'':'trophy '}on your board`):`${g.win==me?'You win':esc(g.P[g.win].n)+' wins'} the trophy!`;if(h0.cont){const w=names(i=>!g.P[i].cont&&online(i));wait=w.length?'Waiting for '+w.join(', '):''}}
   if(ph=='end')st='Tournament over!';
   const tro=p=>[...p.tr].sort((a,b)=>b.r-a.r||a.s-b.s);
   let h=`<div class="topbar"><button class="b sm ghost" onclick="leave()">Leave</button><b class="ttl">SQUIRE</b><span>${TUT?'<b>Tutorial</b>':`Room <b>${S.room.code}</b>`} <button class="b sm ghost" onclick="scores(1)">Scores</button> <button class="b sm ghost" onclick="rules(1)">Rules</button></span></div>`;
@@ -598,7 +605,8 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   if(TUT&&tutStep().a=='end')btn='';
   const win=ph=='show'&&g.win==me;
   h+=`<div class="you ${win?'win':''}" style="--pc:${PC[me]}"><div class="yl"><div class="ln">${chip(me)}<b>You</b>${win?'🏆':''}<span class="lst">${HZ.sqScore(g,me)} pts</span></div><div id="st">${st}${wait?`<div class="wait">${wait}</div>`:''}${ph=='end'&&!host?'<div class="wait">The host can start a rematch.</div>':''}</div><div class="row trow">${ph=='show'&&h0.pd&&h0.pd.length?'':boardHTML(h0,'mini')}<small class="tally">${h0.tr.length+(h0.cr||0)} 🏆 · ${h0.bn||0} ⚜</small></div></div><div class="yb">${obChip()}${btn}</div></div>`;
-  if(ph=='show'&&h0.pd&&h0.pd.length){const pd=h0.pd[0];h+=`<div class="placer"><div class="hsec">Tap a glowing space to place your ${pd.k=='B'?'boon ⚜':(pd.t==HZ.CROWN?'crown 👑':HZ.TNAME[pd.t]+' trophy')}${h0.pd.length>1?` <small>(${h0.pd.length-1} more after this)</small>`:''}</div>${boardHTML(h0,'place')}</div>`}
+  if(ph=='show'&&h0.pd&&h0.pd.length){const ok=k=>HZ.legal(h0,h0.pd[k]).length>0;if(placeK>=h0.pd.length||!ok(placeK))placeK=Math.max(0,h0.pd.findIndex((_,k)=>ok(k)));const pd=h0.pd[placeK],many=h0.pd.length>1;
+   h+=`<div class="placer"><div class="hsec">${many?'You earned several pieces. Pick one, then tap a glowing space':'Tap a glowing space to place your '+pieceName(pd).toLowerCase()}</div>${many?`<div class="pchips">${h0.pd.map((x,k)=>`<button class="b pchip ${k==placeK?'on':''}" onclick="placeK=${k};render()" ${ok(k)?'':'disabled title="No space for this yet: place another piece first"'}>${pieceIcon(x)} ${pieceName(x)}</button>`).join('')}</div>${h0.pd.some(x=>x.k=='B')&&h0.pd.some(x=>x.k=='T')?'<div class="ptip">Tip: placing a boon before a trophy can land the trophy a row higher.</div>':''}`:''}${boardHTML(h0,'place')}</div>`}
   else if(ph!='end'){const hid=nob&&!g.hist.length;
    const n=h0.hand.length,HW=Math.min(vw(),680)-16,CW=66,EDGE=20,STEP=n>1?Math.max(20,Math.min(CW-6,(HW-CW-2*EDGE)/(n-1))):0,fanS=i=>{const d=i-(n-1)/2;return `--r:${(d*Math.min(3,22/Math.max(n,1))).toFixed(1)}deg;--y:${Math.min(12,d*d*0.7).toFixed(1)}px;margin-left:${i?(STEP-CW).toFixed(1):0}px`};
    if(hid)h+=`<div class="hsec">Your hand stays face down until you pick an objective</div><div class="row hand">${h0.hand.map((_,i)=>`<span class="c tb hb" style="${fanS(i)}"></span>`).join('')}</div>`;

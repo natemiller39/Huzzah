@@ -14,7 +14,7 @@ function client(name) {
 }
 const HZE = require('../public/squire/engine.js');
 /* SQUIRE: place any pending trophies/boons (first legal space) before continuing */
-async function placeAll(c) { for (let t = 0; t < 8; t++) { const me = c.state.room.you, p = c.state.g.P[me]; if (!p.pd || !p.pd.length) return; const n = p.pd.length; c.send({ t: 'place', col: HZE.legal(p, p.pd[0])[0] }); await until(() => !c.state.g.P[me].pd || c.state.g.P[me].pd.length < n); } }
+async function placeAll(c) { for (let t = 0; t < 8; t++) { const me = c.state.room.you, p = c.state.g.P[me]; if (!p.pd || !p.pd.length) return; const n = p.pd.length, k = Math.max(0, p.pd.findIndex(pc => HZE.legal(p, pc).length)); c.send({ t: 'place', col: HZE.legal(p, p.pd[k])[0], k }); await until(() => !c.state.g.P[me].pd || c.state.g.P[me].pd.length < n); } }
 const until = async (f, ms = 3000) => { const t = Date.now(); while (!f()) { if (Date.now() - t > ms) throw new Error('timeout'); await sleep(10); } };
 (async () => {
   await sleep(500);

@@ -102,16 +102,25 @@ const scoreWith=(g,i,q)=>sqScore({cfg:g.cfg,P:g.P.map((x,k)=>k==i?q:x),hist:g.hi
 function gainT(g,i,t){const p=g.P[i],now=sqScore(g,i);let b=1;
  legal(p,{k:'T',t}).forEach(j=>{const q=cloneP(p);putPiece(q,{k:'T',t},j);b=Math.max(b,scoreWith(g,i,q)-now+1)});return b}
 /* bot placement: trophies where they score most; boons on columns they hope to win again */
-function botPlace(g,i){const p=g.P[i];
+function botPlaceSeq(g,i,p){
  while(p.pd&&p.pd.length){const pc=p.pd[0],o=legal(p,pc);if(!o.length){p.pd.shift();continue}let bj=o[0],bs=-1e9;
   for(const j of o){let v;
    if(pc.k=='T'){const q=cloneP(p);putPiece(q,pc,j);v=scoreWith(g,i,q)+(j==(p.bd||[]).length?.01*(6-j):0)}
-   else{const c=(p.bd||[])[j];v=!c?.4:c.t==null?-.5:c.s.length<=2?c.s.length+j*.2+(c.t==CROWN?.3:0):-3}
+   else{const c=(p.bd||[])[j];v=!c?.4:c.t==null?-.5:c.s.length<=2?c.s.length+j*.2+(c.t==CROWN?.3:0):-3;
+    if(c&&c.s.length<=2&&p.pd.slice(1).some(x=>x.k=='T'&&x.t===c.t))v+=5} // a trophy of this column is waiting: lift it
    if(v>bs){bs=v;bj=j}}
   putPiece(p,pc,bj);p.pd.shift()}}
-function place(g,i,col){const p=g.P[i];if(!p||!p.pd||!p.pd.length||g.phase!='show')return false;
- if(!legal(p,p.pd[0]).includes(col))return false;putPiece(p,p.pd[0],col);p.pd.shift();
- while(p.pd.length&&!legal(p,p.pd[0]).length)p.pd.shift();return true}
+/* bot placement: try each order of the earned pieces (boons first can lift a trophy), keep the best board */
+function botPlace(g,i){const p=g.P[i];if(!p.pd||!p.pd.length)return;
+ const orders=perm(p.pd.map((_,k)=>k)).slice(0,24);let best=null,bv=-1e9;
+ for(const o of orders){const q=cloneP(p);q.pd=o.map(k=>p.pd[k]);botPlaceSeq(g,i,q);const v=scoreWith(g,i,q)+(o[0]==0?.001:0);if(v>bv){bv=v;best=q}}
+ p.bd=best.bd;p.pd=[]}
+function place(g,i,col,k){const p=g.P[i];k=k|0;if(!p||!p.pd||!p.pd[k]||g.phase!='show')return false;
+ if(!legal(p,p.pd[k]).includes(col))return false;putPiece(p,p.pd[k],col);p.pd.splice(k,1);dropStuck(g,i);return true}
+/* pieces with no legal space are discarded only when none of the remaining pieces can be placed
+   (placing one piece can open a space for another); a lost trophy still scores its 1 point */
+function dropStuck(g,i){const p=g.P[i];if(!p.pd.length||p.pd.some(pc=>legal(p,pc).length))return;
+ p.pd.forEach(pc=>{(g.olog=g.olog||[]).push(pc.k=='B'?`${p.n}'s boon had no space on the board.`:`${p.n}'s ${TNAME[pc.t]} ${pc.t==CROWN?'':'trophy '}had no space on the board (it still scores 1 point).`)});p.pd=[]}
 
 /* ---------- authoritative game flow (server) ---------- */
 function drawNoble(g,ex){const act=g.nobles.map(z=>z.n.id),ok=n=>!ex.some(o=>o.ev==n.ev||o.kind==n.kind);if(!g.nd.length)g.nd=shuf(NOB.filter(n=>!act.includes(n.id)));let i=g.nd.findIndex(ok);if(i<0){g.nd=shuf(NOB.filter(n=>!act.includes(n.id)));i=g.nd.findIndex(ok);if(i<0)i=0}return g.nd.splice(i,1)[0]}
@@ -213,7 +222,7 @@ function reveal(g){const T=TRO(g);
  g.hist.push({w:g.wave,e:g.ev,win:w,cat:g.ks[w][0],pl:g.P[w].pl.slice()});g.win=w;g.P[w].tr.push(T);g.phase='show';g.P.forEach(p=>p.cont=false);
  /* a completed secret objective earns a boon (the event win that completes it already gave a trophy) */
  g.olog=[];if(g.cfg.obon)g.P.forEach((p,i)=>{if(p.ob==null||p.obGot||!ach(g,OBJ[p.ob],i))return;p.obGot=true;p.bn++;give(i,{k:'B',ob:1});g.olog.push(`${p.n} completed a secret objective and earns a boon.`)});
- g.P.forEach((p,i)=>{if(p.bot)botPlace(g,i);else while(p.pd.length&&!legal(p,p.pd[0]).length)p.pd.shift()});refillObjectives(g)}
+ g.P.forEach((p,i)=>{if(p.bot)botPlace(g,i);else dropStuck(g,i)});refillObjectives(g)}
 function nxt(g){g.P.forEach((p,i)=>{if(p.pd&&p.pd.length)botPlace(g,i)});g.P.forEach(p=>p.cont=false);
  if(g.ev==4){if(g.wave==3){g.phase='end';return}g.wave++;g.ev=0;g.phase='pick';deal(g)}
  else{g.ev++;g.phase='pick';g.P.forEach(p=>{p.pl=[];p.sel=null});begin(g)}}

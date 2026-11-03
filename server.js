@@ -192,7 +192,7 @@ wss.on('connection', ws => {
         if (!g || !E(room).unplay(g, i)) return;
         break;
       case 'place': // SQUIRE: put an earned trophy, crown or boon on your scorecard
-        if (!g || !E(room).place || !E(room).place(g, i, m.col | 0)) return err('That piece can’t go there.');
+        if (!g || !E(room).place || !E(room).place(g, i, m.col | 0, m.k | 0)) return err('That piece can’t go there.');
         break;
       case 'cont':
         if (!g || g.phase !== 'show') return;
