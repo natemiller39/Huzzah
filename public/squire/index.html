@@ -360,18 +360,17 @@ html,body{background:radial-gradient(ellipse 60% 45% at 8% 0%,rgba(255,150,50,.2
 @media (max-height:620px){.ptip{display:none}.sqb.place{max-width:215px}.placer .hsec{margin-bottom:3px}}
 </style></head><body><div id="app"></div>
 <script src="../assets.js"></script>
-<script src="objimg.js"></script>
 <script src="engine.js?v=35"></script>
 <script>
 const {SU,COL,RK,EV,HN,OBJ,cmp,best,bestCards,hname,nq,NV,TRO,npts,hpts,ach,obv,obp,needOb,ranking}=HZ;
 const PC=['#ffd24a','#ff6b6b','#5bc0ff','#7be07b','#c58cff','#ffa94d'],STI=['🏹','⚔️','🐎','🛡️','🏅'];
 const RULES=`<h2>SQUIRE: Tournament of Banners</h2><p><i>A poker-inspired tournament for 2 to 6 players. Win trophies and build your scorecard.</i></p>
 <h3>Each day</h3><p>You are dealt 10 cards. The day has five events: <b>Archery</b> (play 2 cards, no community cards), <b>Sword Fight</b> (3 community cards come out; play 2), <b>Joust</b> (a 4th community card; play 2), <b>Grand Melee</b> (a 5th; play 2) and <b>Champion</b> (play 1 card: only what it makes with the community cards counts). Everyone plays at the same time, then reveals. The best poker hand wins the event. You play 9 cards a day and keep 1 for the next day. The game lasts 4 days.</p>
-<h3>Trophies, crowns and boons</h3><ul><li><b>Trophy:</b> win an event and you take its trophy.</li><li><b>Crown:</b> a new noble (the favor banner) comes out each day, watching one event. Tomorrow's noble is shown on the field (under the banner) so you can plan which card to keep. Whoever best meets the noble's objective at that event wins its crown. A crown is a trophy of its own kind.</li><li><b>Boon:</b> lose an event but still play <b>a pair at Archery</b>, <b>two pair or better</b> at the Sword Fight, Joust or Grand Melee, or a <b>pair at Champion</b> (your card matches a community card), and you earn a boon. Completing your secret objective also earns a boon.</li></ul>
+<h3>Trophies, crowns and boons</h3><ul><li><b>Trophy:</b> win an event and you take its trophy.</li><li><b>Crown:</b> a new noble (the favor banner) comes out each day, watching one event. Tomorrow's noble is shown on the field (under the banner) so you can plan which card to keep. Whoever best meets the noble's objective at that event wins its crown. A crown is a trophy of its own kind.</li><li><b>Boon:</b> lose an event but still play <b>a pair at Archery</b>, <b>two pair or better</b> at the Sword Fight, Joust or Grand Melee, or a <b>pair at Champion</b> (your card matches a community card), and you earn a boon. Completing a picture objective also earns a boon.</li></ul>
 <h3>Your scorecard</h3><p>Six banner columns, each a bottom box with 3 rows above it, worth more toward the right.</p><ul><li>Each column belongs to the first kind of trophy placed in it.</li><li>A trophy of a kind you already have goes up its own column. A new kind goes into the next empty bottom box, or on top of a column that only holds boons.</li><li>A boon can go into the next empty bottom box, or up any column that already has a trophy in it. A column with only boons takes more boons only once the whole row below is full: finish the bottom row before building up, then each row above.</li><li>If a trophy's column is full, it still scores its 1 point.</li></ul>
 <h3>Scoring</h3><ul><li><b>1 point</b> for every trophy and crown you win.</li><li><b>Each column</b> pays the value of its <b>highest trophy</b>. Boons above it pay nothing, so a boon only pays off if you win that event again later.</li><li><b>Variety:</b> 2 kinds +1, 3 kinds +2, 4 kinds +3, 5 kinds +5, 6 kinds +7.</li></ul><p>The highest total wins. Ties: more trophies, then more board points.</p>
 <h3>Tie-breaks</h3><p>Each day's noble card shows a suit order, best to worst (also shown on the field as <i>Ties</i>). It breaks ties all day: for exactly tied hands in an event, or for the noble's crown, compare the suits of the played cards, highest rank first.</p>
-<h3>Secret objectives</h3><p>You may be dealt objectives and keep one secret. Complete it and you earn a boon.</p>`;
+<h3>Secret objectives</h3><p>You may be dealt objectives and keep one secret. Hand objectives (win with a full house, flush, straight, two pair or three of a kind) score the points printed on the card. Picture objectives (win a named event, Champion with a low card, King and Queen from your pocket) earn a boon.</p>`;
 const ONLINE_RULES=`<h3>Playing online</h3><ul><li><b>Create a game</b> to get a 4-letter room code, then share the code or the invite link. Friends tap <b>Join</b> and enter it.</li><li>The host picks the table size (2 to 6). Empty seats are filled with bots when the host starts.</li><li>Everyone chooses cards at the same time and taps <b>Lock in</b>. You can change your cards until the last player locks in; then all cards are revealed together.</li><li>After each reveal everyone taps <b>Continue</b>; the next event starts when all connected players are ready.</li><li>If you lose connection, just reopen the page: you'll rejoin your seat. If a friend leaves for good, the host can hand their seat to a bot.</li></ul>`;
 
 /* ---------- offline solo build: the whole game runs on this device against bots ---------- */
@@ -537,7 +536,7 @@ function zoomO(id){zoom(null,OIMG[id])}
 
 function obHTML(){const g=G,h0=myP();if(!g.cfg.obon||g.phase=='end'||!h0.oc||!h0.oc.length||g.cfg.od<2)return'';if(!(h0.ob==null||(obOpen&&canSwitchOb())))return'';
   return `<div class="obsheet"><div class="obt">${h0.rf?'You completed your objective! Choose a new one':'Choose your secret objective'}</div><div class="obsub">Only you can see it. ${h0.rf?'It scores if you complete it from now on.':'You can change it until the first cards are revealed.'}</div><div class="obrow">${h0.oc.map((o,k)=>`<div class="ob ${h0.ob==o?'sel':''}" onclick="pickObj(${k})"><img src="${OIMG[OBJ[o].id]}" alt="${OBJ[o].t}"><small>+${obv(g,o)}</small></div>`).join('')}</div></div>`}
-function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[]).length,dn=d?`<small class="obd" title="Completed objectives">✓${d} ⚜</small>`:'';if(h0.ob==null)return dn;const o=OBJ[h0.ob],a=ach(g,o,g.me);return `<span class="obc ${a?'ok':''}" onclick="zoomO('${o.id}')" title="${o.t}"><img src="${OIMG[o.id]}" alt="${o.t}"><b>⚜${a?' ✓':''}</b></span>${canSwitchOb()?'<button class="b rb obsw" onclick="obOpen=true;render()">Change</button>':''}${dn}`}
+function obChip(){const g=G,h0=myP();if(!g.cfg.obon)return'';const d=(h0.done||[]).length,dn=d?`<small class="obd" title="Completed objectives">✓${d}</small>`:'';if(h0.ob==null)return dn;const o=OBJ[h0.ob],a=ach(g,o,g.me);return `<span class="obc ${a?'ok':''}" onclick="zoomO('${o.id}')" title="${o.t}"><img src="${OIMG[o.id]}" alt="${o.t}"><b>${o.k=='hand'?'+'+obv(g,h0.ob):'⚜'}${a?' ✓':''}</b></span>${canSwitchOb()?'<button class="b rb obsw" onclick="obOpen=true;render()">Change</button>':''}${dn}`}
 
 /* ---------- SQUIRE: the tournament field (your painted board) and the scorecard boards ---------- */
 const BCOL=['#8e2a22','#3f6b2a','#1f3f86','#5a2f7a','#b8862a','#262626'],DIVL=['','+1','+2','+3','+5','+7'];
@@ -550,10 +549,10 @@ function boardHTML(p,mode){const g=G,bd=p.bd||[],V=HZ.VALS[g.cfg.brd=='b'?'b':'a
     const inner=x?pieceHTML(x,c.t):lv?`<em>+${V[j][lv-1]}</em>`:(j==0&&!bd.length?'<em class="tro">🏆</em>':'');
     cells+=`<div class="bc ${lv?'':'b0'} ${top==lv&&lv>0?'bsc':''} ${tg?'tgt':''}" ${tg?`onclick="placeAt(${j})"`:''}>${tg?'<b class="here">Here</b>':inner}</div>`}
    cols+=`<div class="bcol" style="--bc:${BCOL[j]}"><div class="ban"></div>${cells}</div>`}
-  const pr=HZ.sqParts(g,g.P.indexOf(p)),tot=pr.base+pr.cols+pr.div;
+  const pr=HZ.sqParts(g,g.P.indexOf(p)),tot=pr.base+pr.cols+pr.div+pr.ob;
   if(mode=='mini')return `<div class="sqb mini" onclick="scores(1)" title="Your scorecard">${cols}</div>`;
   return `<div class="sqb ${mode}">${cols}</div><div class="divt">${DIVL.map((v,k)=>`<span class="${types>k?'on':''}">${v||'1'}</span>`).join('')}<small>types</small></div>
-  <div class="sqsum">${pr.base} trophies + ${pr.cols} board + ${pr.div} variety = <b>${tot} pts</b></div>`}
+  <div class="sqsum">${pr.base} trophies + ${pr.cols} board + ${pr.div} variety${pr.ob?` + ${pr.ob} objectives`:''} = <b>${tot} pts</b></div>`}
 let placeK=0;
 function placeAt(j){const k=Math.min(placeK,myP().pd.length-1);placeK=0;send({t:'place',col:j,k})}
 const pieceName=pc=>pc.k=='B'?(pc.ob?'Boon (objective)':'Boon'):pc.t==HZ.CROWN?'Crown':HZ.TNAME[pc.t]+' trophy';
@@ -596,7 +595,7 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   if(TUT)h+=coachHTML();
   if(ph!='end')h+=arenaHTML(T);
   else{const r=ranking(g);
-   h+=`<div class="box fin"><div class="fw">${r[0].i==g.me?'You win':esc(r[0].p.n)+' wins'} the tournament! HUZZAH!</div>${r.map((x,i)=>{const pr=HZ.sqParts(g,x.i);return `<div class="res2 ${i?'':'win'}" onclick="zoomB(${x.i})"><div class="rh"><span class="rk">${i+1}</span>${chip(x.i)}<b>${esc(x.p.n)}${x.i==g.me?' (you)':''}</b><span class="rt">${pr.base+pr.cols+pr.div} pts</span></div>${boardHTML(x.p,'mini').replace('onclick="scores(1)"','')}<div class="rd">${pr.base} trophies + ${pr.cols} board + ${pr.div} variety</div></div>`}).join('')}<i>Tap a player to see their scorecard. Ties: more trophies, then more board points.</i></div>`}
+   h+=`<div class="box fin"><div class="fw">${r[0].i==g.me?'You win':esc(r[0].p.n)+' wins'} the tournament! HUZZAH!</div>${r.map((x,i)=>{const pr=HZ.sqParts(g,x.i);return `<div class="res2 ${i?'':'win'}" onclick="zoomB(${x.i})"><div class="rh"><span class="rk">${i+1}</span>${chip(x.i)}<b>${esc(x.p.n)}${x.i==g.me?' (you)':''}</b><span class="rt">${pr.base+pr.cols+pr.div+pr.ob} pts</span></div>${boardHTML(x.p,'mini').replace('onclick="scores(1)"','')}<div class="rd">${pr.base} trophies + ${pr.cols} board + ${pr.div} variety${pr.ob?` + ${pr.ob} objectives`:''}</div></div>`}).join('')}<i>Tap a player to see their scorecard. Ties: more trophies, then more board points.</i></div>`}
   let btn='';
   if(ph=='pick')btn=h0.sel?`<button class="b" onclick="unlock()">Change</button>`:`<button class="b" onclick="lockIn()" ${sel.length==k&&!nob?'':'disabled'}>Lock in</button>`;
   const pend=ph=='show'&&h0.pd&&h0.pd.length;
@@ -615,9 +614,9 @@ function gameHTML(){const g=G,e=EV[g.ev],ph=g.phase,me=g.me,h0=g.P[me],T=TRO(g),
   return h}
 
 function scoreHTML(){const g=G,me=g.me,V=HZ.VALS[g.cfg.brd=='b'?'b':'a'];
- const rows=g.P.map((p,i)=>({p,i,x:HZ.sqParts(g,i)})).sort((a,b)=>(b.x.base+b.x.cols+b.x.div)-(a.x.base+a.x.cols+a.x.div));
- return `<h2>📊 Scores</h2><p>Each trophy (and crown) is worth 1 point. Each banner column pays the value of its highest trophy. Collecting different kinds of trophy moves you along the variety track.</p>
- <table class="sc st"><tr><th>Player</th><th>🏆</th><th>Board</th><th>Variety</th><th>Total</th></tr>${rows.map(r=>`<tr class="${r.i==me?'me':''}" onclick="zoomB(${r.i})"><td>${esc(r.p.n)}</td><td>${r.x.base}</td><td>${r.x.cols}</td><td>${r.x.div}</td><td><b>${r.x.base+r.x.cols+r.x.div}</b></td></tr>`).join('')}</table>
+ const rows=g.P.map((p,i)=>({p,i,x:HZ.sqParts(g,i)})).sort((a,b)=>(b.x.base+b.x.cols+b.x.div+b.x.ob)-(a.x.base+a.x.cols+a.x.div+a.x.ob));
+ return `<h2>📊 Scores</h2><p>Each trophy (and crown) is worth 1 point. Each banner column pays the value of its highest trophy. Collecting different kinds of trophy moves you along the variety track. Hand objectives add their points.</p>
+ <table class="sc st"><tr><th>Player</th><th>🏆</th><th>Board</th><th>Variety</th><th>Obj.</th><th>Total</th></tr>${rows.map(r=>`<tr class="${r.i==me?'me':''}" onclick="zoomB(${r.i})"><td>${esc(r.p.n)}</td><td>${r.x.base}</td><td>${r.x.cols}</td><td>${r.x.div}</td><td>${r.x.ob}</td><td><b>${r.x.base+r.x.cols+r.x.div+r.x.ob}</b></td></tr>`).join('')}</table>
  <h3>Your scorecard</h3>${boardHTML(g.P[me],'big')}<p><small>Tap a player to see their scorecard.</small></p>`}
 
 function scores(o){let d=document.getElementById('rules');if(!d){d=document.createElement('div');d.id='rules';document.body.appendChild(d)}d.innerHTML=o&&G?`<div class="rp"><button class="b" onclick="scores(0)">Close</button>${scoreHTML()}</div>`:'';d.style.display=o&&G?'block':'none'}

@@ -43,8 +43,8 @@ function legal(p,pc){const bd=p.bd||[],out=[],nw=bd.length<6?[bd.length]:[];
  bd.forEach((c,j)=>{if(c.s.length<4&&(c.s.includes('T')||rowFull(c.s.length)))out.push(j)});return nw.concat(out)}
 function colPts(g,c,j){if(c.t==null)return 0;const h=c.s.lastIndexOf('T');return h>=1?VALS[g.cfg.brd=='b'?'b':'a'][j][h-1]:0}
 function sqParts(g,i){const p=g.P[i],bd=p.bd||[],types=bd.filter(c=>c.t!=null).length;
- return {base:(p.tr||[]).length+(p.cr||0)+(p.xt||0),cols:bd.reduce((a,c,j)=>a+colPts(g,c,j),0),div:DIV[types]}}
-const sqScore=(g,i)=>{const x=sqParts(g,i);return x.base+x.cols+x.div};
+ return {base:(p.tr||[]).length+(p.cr||0)+(p.xt||0),cols:bd.reduce((a,c,j)=>a+colPts(g,c,j),0),div:DIV[types],ob:p.op||0}}
+const sqScore=(g,i)=>{const x=sqParts(g,i);return x.base+x.cols+x.div+x.ob};
 
 /* ---------- pure helpers ---------- */
 const srt=(a,b)=>a.r-b.r||a.s-b.s;
@@ -140,7 +140,7 @@ function botObj(oc){return oc.slice().sort((a,b)=>(OBE[OBJ[b].k]||0)*2+OBJ[b].v*
 function newGame(players,cfg){const n=players.length;cfg=Object.assign(defaultCfg(),cfg||{});cfg.obon=cfg.od>0;
  const trs=new Array(20),HS=[0,1,2,3].map(s=>shuf(perm([0,1,2,3,4].slice(0,n>4?5:4).filter(x=>x!=s))).slice(0,5));
  TR.forEach((r,i)=>{const ws=shuf([0,1,2,3]);for(let w=0;w<4;w++){const s=ws[w];trs[w*5+i]={s,r,h:[s,...HS[s][i]]}}});
- const g={n,cfg,P:players.map(x=>({n:x.name,bot:!!x.bot,hand:[],tr:[],pl:[],sel:null,cont:false,oc:[],ob:null,done:[],rf:0,obAt:0,bd:[],pd:[],cr:0,bn:0,xt:0,gt:[],obGot:false})),trs,wave:0,ev:0,phase:'pick',gain:[],nd:shuf(NOB.slice()),nobles:[],cl:[],nlog:[],olog:[],hist:[],ks:null,win:null};
+ const g={n,cfg,P:players.map(x=>({n:x.name,bot:!!x.bot,hand:[],tr:[],pl:[],sel:null,cont:false,oc:[],ob:null,done:[],rf:0,obAt:0,bd:[],pd:[],cr:0,bn:0,xt:0,gt:[],obGot:false,op:0})),trs,wave:0,ev:0,phase:'pick',gain:[],nd:shuf(NOB.slice()),nobles:[],cl:[],nlog:[],olog:[],hist:[],ks:null,win:null};
  const od=shuf(OBJ.map((_,i)=>i));g.od=od;
  if(cfg.obon)g.P.forEach(p=>{for(let k=0;k<cfg.od;k++)p.oc.push(od.length?od.pop():Math.random()*OBJ.length|0);p.ob=p.bot?botObj(p.oc):cfg.od==1?p.oc[0]:null});
  deal(g);return g}
@@ -221,7 +221,11 @@ function reveal(g){const T=TRO(g);
  g.P.forEach((p,i)=>{if(i!=w&&boonOK(g.ks[i],g.ev,p.pl)){p.bn++;give(i,{k:'B'})}});
  g.hist.push({w:g.wave,e:g.ev,win:w,cat:g.ks[w][0],pl:g.P[w].pl.slice()});g.win=w;g.P[w].tr.push(T);g.phase='show';g.P.forEach(p=>p.cont=false);
  /* a completed secret objective earns a boon (the event win that completes it already gave a trophy) */
- g.olog=[];if(g.cfg.obon)g.P.forEach((p,i)=>{if(p.ob==null||p.obGot||!ach(g,OBJ[p.ob],i))return;p.obGot=true;p.bn++;give(i,{k:'B',ob:1});g.olog.push(`${p.n} completed a secret objective and earns a boon.`)});
+ g.olog=[];if(g.cfg.obon)g.P.forEach((p,i)=>{if(p.ob==null||p.obGot||!ach(g,OBJ[p.ob],i))return;p.obGot=true;const o=OBJ[p.ob];
+  /* hand objectives (full house, flush, straight, two pair, three of a kind) score their printed points;
+     picture objectives (an event, Champion low card, King and Queen) earn a boon */
+  if(o.k=='hand'){const v=obv(g,p.ob);p.op=(p.op||0)+v;g.olog.push(`${p.n} completed a secret objective: +${v} points.`)}
+  else{p.bn++;give(i,{k:'B',ob:1});g.olog.push(`${p.n} completed a secret objective and earns a boon.`)}});
  g.P.forEach((p,i)=>{if(p.bot)botPlace(g,i);else dropStuck(g,i)});refillObjectives(g)}
 function nxt(g){g.P.forEach((p,i)=>{if(p.pd&&p.pd.length)botPlace(g,i)});g.P.forEach(p=>p.cont=false);
  if(g.ev==4){if(g.wave==3){g.phase='end';return}g.wave++;g.ev=0;g.phase='pick';deal(g)}
@@ -229,7 +233,7 @@ function nxt(g){g.P.forEach((p,i)=>{if(p.pd&&p.pd.length)botPlace(g,i)});g.P.for
 /* what player `me` is allowed to see */
 function view(g,me){const open=g.phase=='end';
  return {n:g.n,cfg:g.cfg,trs:g.trs,wave:g.wave,ev:g.ev,phase:g.phase,comm:g.comm,nobles:g.nobles,nextN:g.nextN||[],cl:g.cl,nlog:g.nlog,ncl:g.phase=='show'?g.ncl||[]:[],olog:g.olog,hist:g.hist,ks:g.phase=='show'?g.ks:null,win:g.win,me,
-  P:g.P.map((p,i)=>{const o={n:p.n,bot:p.bot,tr:p.tr,bd:p.bd,pd:p.pd,cr:p.cr,bn:p.bn,xt:p.xt,gt:p.gt,pl:g.phase=='pick'?[]:p.pl,hc:p.hand.length,locked:!!p.sel,cont:p.cont,ob:null,oc:null,hand:null,sel:null,done:null,dn:p.done.length,rf:0,obAt:0};
+  P:g.P.map((p,i)=>{const o={n:p.n,bot:p.bot,tr:p.tr,bd:p.bd,pd:p.pd,cr:p.cr,bn:p.bn,xt:p.xt,gt:p.gt,op:p.op||0,pl:g.phase=='pick'?[]:p.pl,hc:p.hand.length,locked:!!p.sel,cont:p.cont,ob:null,oc:null,hand:null,sel:null,done:null,dn:p.done.length,rf:0,obAt:0};
    if(i==me||open){o.ob=p.ob;o.done=p.done;o.rf=p.rf;o.obAt=p.obAt}
    if(i==me){o.hand=p.hand;o.oc=p.oc;o.sel=p.sel}
    return o})}}
