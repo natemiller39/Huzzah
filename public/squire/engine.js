@@ -36,7 +36,8 @@ const obTrophy=(o,ev)=>o.k=='ev'?o.ev:o.k=='ch5'?4:ev;
 /* where a piece can go: column index, or bd.length for the next empty bottom box */
 function legal(p,pc){const bd=p.bd||[],out=[],nw=bd.length<6?[bd.length]:[];
  if(pc.k=='T'){const ci=bd.findIndex(c=>c.t===pc.t);if(ci>=0)return bd[ci].s.length<4?[ci]:[];
-  bd.forEach((c,j)=>{if(c.t==null&&c.s.length<4)out.push(j)});return nw.concat(out)}
+  /* a new kind of trophy goes in the next empty bottom box, or in the leftmost second-row space above a boon */
+  const j2=bd.findIndex(c=>c.t==null&&c.s.length==1);if(j2>=0)out.push(j2);return nw.concat(out)}
  /* boons: sideways into the next bottom box, or up any column that already holds a trophy. A column with only boons
     takes more boons only once the row below is full across all six columns. */
  const rowFull=L=>bd.length==6&&bd.every(c=>c.s.length>=L);
