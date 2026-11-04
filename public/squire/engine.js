@@ -44,9 +44,10 @@ function legal(p,pc){const bd=p.bd||[],out=[],nw=bd.length<6?[bd.length]:[];
  if(pc.k=='T'){const ci=bd.findIndex(c=>c.t===pc.t);if(ci>=0)return bd[ci].s.length<4?[ci]:[];
   /* a new kind of trophy goes in the next empty bottom box, or in the leftmost second-row space above a boon */
   const j2=bd.findIndex(c=>c.t==null&&c.s.length==1);if(j2>=0)out.push(j2);return nw.concat(out)}
- /* boons fill each row from the left, like trophies: the next empty bottom box, or the leftmost open space in any row
-    above (sitting on whatever is below it) */
+ /* boons: the next empty bottom box, the leftmost open space in any row above (rows fill from the left), or the open
+    space above a trophy in any column that has one */
  for(let L=1;L<4;L++){const j=bd.findIndex(c=>c.s.length==L);if(j>=0)out.push(j)}
+ bd.forEach((c,j)=>{if(c.s.length<4&&c.s.includes('T')&&!out.includes(j))out.push(j)});
  return nw.concat(out)}
 function colPts(g,c,j){if(c.t==null)return 0;const h=c.s.lastIndexOf('T');return h>=1?VALS[g.cfg.brd=='b'?'b':'a'][j][h-1]:0}
 function sqParts(g,i){const p=g.P[i],bd=p.bd||[],types=bd.filter(c=>c.t!=null).length;
