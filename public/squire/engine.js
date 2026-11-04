@@ -30,7 +30,13 @@ const DIV=[0,0,1,2,3,5,7];
 /* what earns a boon when you lose the event: at Archery any pair (a gamble: that pair could have become three of a kind later); two pair or better at the
    Sword Fight, Joust and Grand Melee; a pair at Champion (your card matches the table) */
 const MINH=[1,2,2,2,1];
-const boonOK=(k,ev)=>k[0]>=MINH[ev];
+/* for two pair or better (Sword Fight, Joust, Grand Melee) a card you played must be part of the hand: pairing,
+   making three or four of a kind, or completing the straight or flush. A two pair already in the middle cards,
+   with your cards only as extras, doesn't count. */
+function playedMakesHand(pl,cm){const five=bestCards(pl.concat(cm)),cat=eN(five)[0];
+ if(cat==4||cat==5||cat>=8)return five.some(c=>pl.includes(c));
+ const n={};five.forEach(c=>n[c.r]=(n[c.r]||0)+1);return five.some(c=>pl.includes(c)&&n[c.r]>=2)}
+const boonOK=(k,ev,pl,cm)=>k[0]>=MINH[ev]&&(ev==0||ev==4||!pl||!cm||playedMakesHand(pl,cm));
 /* the trophy a completed secret objective gives: the event it names, Champion for the low-card one, otherwise the event where it was done */
 const obTrophy=(o,ev)=>o.k=='ev'?o.ev:o.k=='ch5'?4:ev;
 /* where a piece can go: column index, or bd.length for the next empty bottom box */
@@ -38,10 +44,10 @@ function legal(p,pc){const bd=p.bd||[],out=[],nw=bd.length<6?[bd.length]:[];
  if(pc.k=='T'){const ci=bd.findIndex(c=>c.t===pc.t);if(ci>=0)return bd[ci].s.length<4?[ci]:[];
   /* a new kind of trophy goes in the next empty bottom box, or in the leftmost second-row space above a boon */
   const j2=bd.findIndex(c=>c.t==null&&c.s.length==1);if(j2>=0)out.push(j2);return nw.concat(out)}
- /* boons: sideways into the next bottom box, or up any column that already holds a trophy. A column with only boons
-    takes more boons only once the row below is full across all six columns. */
- const rowFull=L=>bd.length==6&&bd.every(c=>c.s.length>=L);
- bd.forEach((c,j)=>{if(c.s.length<4&&(c.s.includes('T')||rowFull(c.s.length)))out.push(j)});return nw.concat(out)}
+ /* boons fill each row from the left, like trophies: the next empty bottom box, or the leftmost open space in any row
+    above (sitting on whatever is below it) */
+ for(let L=1;L<4;L++){const j=bd.findIndex(c=>c.s.length==L);if(j>=0)out.push(j)}
+ return nw.concat(out)}
 function colPts(g,c,j){if(c.t==null)return 0;const h=c.s.lastIndexOf('T');return h>=1?VALS[g.cfg.brd=='b'?'b':'a'][j][h-1]:0}
 function sqParts(g,i){const p=g.P[i],bd=p.bd||[],types=bd.filter(c=>c.t!=null).length;
  return {base:(p.tr||[]).length+(p.cr||0)+(p.xt||0),cols:bd.reduce((a,c,j)=>a+colPts(g,c,j),0),div:DIV[types],ob:p.op||0}}
@@ -179,7 +185,7 @@ function botPick(g,p){if(!p.mood)p.mood=TEMPERS[Math.random()*TEMPERS.length|0];
  for(const c of combos(p.hand,k)){const e=handKey(c,g.comm,g.ev),str=(e[0]*1000+(e[1]||0)*12+(e[2]||0))*(M.plan?Math.min(1.8,want):1);
   let s=(smp?str*.1+smp.filter(x=>!x||cmp(e,x)>0).length/smp.length*1200*Math.min(2,want):str)-w*c.reduce((a,x)=>a+x.r,0)+Math.random()*M.nz;
   lv.forEach(z=>{if(z.sp[0]!=null)return;const r=nq(z.n,c,g.comm);if(r)s+=(M.plan?300+110*crownG:250+60*crownG)*M.nb});
-  if(M.plan&&boonOK(e,g.ev,c))s+=120;
+  if(M.plan&&boonOK(e,g.ev,c,g.comm))s+=120;
   if(later.length){const rest=p.hand.filter(x=>!c.includes(x));
    later.forEach(z=>{const kk=EV[z.n.ev][1];if(rest.length>=kk&&combos(rest,kk).some(cc=>nq(z.n,cc,g.comm)))s+=140*M.nb})}
   if(M.plan&&g.ev==4&&g.nextN&&g.nextN.length){const kept=p.hand.filter(x=>!c.includes(x))[0];
@@ -219,7 +225,7 @@ function reveal(g){const T=TRO(g);
   if(bi<0){g.nlog.push(`${z.n.name} (${z.n.txt}): nobody qualified.`);return}
   z.sp[0]=bi;g.P[bi].cr++;give(bi,{k:'T',t:CROWN});g.ncl.push({p:bi,v:1,nm:z.n.name});g.nlog.push(`${g.P[bi].n} wins ${z.n.name}'s crown (${z.n.txt}).`)});
  /* boons: lost the event but played at least the minimum hand */
- g.P.forEach((p,i)=>{if(i!=w&&boonOK(g.ks[i],g.ev,p.pl)){p.bn++;give(i,{k:'B'})}});
+ g.P.forEach((p,i)=>{if(i!=w&&boonOK(g.ks[i],g.ev,p.pl,g.comm)){p.bn++;give(i,{k:'B'})}});
  g.hist.push({w:g.wave,e:g.ev,win:w,cat:g.ks[w][0],pl:g.P[w].pl.slice()});g.win=w;g.P[w].tr.push(T);g.phase='show';g.P.forEach(p=>p.cont=false);
  /* a completed secret objective earns a boon (the event win that completes it already gave a trophy) */
  g.olog=[];if(g.cfg.obon)g.P.forEach((p,i)=>{if(p.ob==null||p.obGot||!ach(g,OBJ[p.ob],i))return;p.obGot=true;const o=OBJ[p.ob];
