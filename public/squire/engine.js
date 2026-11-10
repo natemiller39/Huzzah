@@ -29,7 +29,7 @@ const VALS={a:[[1,2,3],[2,3,5],[3,4,7],[4,5,9],[5,7,12],[7,9,16]],b:[[1,2,4],[2,
 const DIV=[0,0,1,2,3,5,7];
 /* what earns a boon when you lose the event: at Archery any pair (a gamble: that pair could have become three of a kind later); two pair or better at the
    Sword Fight, Joust and Grand Melee; a pair at Champion (your card matches the table) */
-const MINH=[1,2,2,2,1];
+const MINH=[1,2,3,3,1]; // Joust and Grand Melee need three of a kind or better
 /* for two pair or better (Sword Fight, Joust, Grand Melee) a card you played must be part of the hand: pairing,
    making three or four of a kind, or completing the straight or flush. A two pair already in the middle cards,
    with your cards only as extras, doesn't count. */
@@ -46,8 +46,9 @@ function legal(p,pc){const bd=p.bd||[],out=[],nw=bd.length<6?[bd.length]:[];
   const j2=bd.findIndex(c=>c.t==null&&c.s.length==1);if(j2>=0)out.push(j2);return nw.concat(out)}
  /* boons: the next empty bottom box, the leftmost open space in any row above (rows fill from the left), or the open
     space above a trophy in any column that has one */
- for(let L=1;L<4;L++){const j=bd.findIndex(c=>c.s.length==L);if(j>=0)out.push(j)}
- bd.forEach((c,j)=>{if(c.s.length<4&&c.s.includes('T')&&!out.includes(j))out.push(j)});
+ for(let L=1;L<4;L++){const j=bd.findIndex(c=>c.s.length<=L);if(j>=0&&bd[j].s.length==L)out.push(j)} // leftmost open space of each row, with everything to its left at least that high
+ /* staircase: a boon above a trophy can't go higher than the column to its left is already built */
+ bd.forEach((c,j)=>{if(c.s.length<4&&c.s.includes('T')&&!out.includes(j)&&(j==0||bd[j-1].s.length>c.s.length))out.push(j)});
  return nw.concat(out)}
 function colPts(g,c,j){if(c.t==null)return 0;const h=c.s.lastIndexOf('T');return h>=1?VALS[g.cfg.brd=='b'?'b':'a'][j][h-1]:0}
 function sqParts(g,i){const p=g.P[i],bd=p.bd||[],types=bd.filter(c=>c.t!=null).length;
